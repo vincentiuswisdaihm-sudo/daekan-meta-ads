@@ -1,6 +1,6 @@
 ---
 name: creative-qa
-description: Gate QA untuk pipeline daekan-meta-ads. Mengevaluasi briefs/batch-latest.md (sebelum produksi) atau briefs/assets-ready.md (sebelum launch) terhadap kekuatan hook 3 detik, konsistensi brand, kesesuaian format UTM, kepatuhan Meta Ads Policy, dan aturan dual-engine. Mengembalikan verdict PASS / REVISE / FAIL per item dengan bukti. Read-only, tidak pernah mengedit file.
+description: Gate QA untuk pipeline daekan-meta-ads. Mengevaluasi briefs/batch-latest.md (sebelum produksi), briefs/lp-sync.md (landing page — message-match, URL bersih tanpa UTM, policy, Meta Pixel aktif), atau briefs/assets-ready.md (sebelum launch) terhadap kekuatan hook 3 detik, konsistensi brand, kesesuaian format UTM, kepatuhan Meta Ads Policy, dan aturan dual-engine. Mengembalikan verdict PASS / REVISE / FAIL per item dengan bukti. Read-only, tidak pernah mengedit file.
 tools: Read, Glob, Grep
 model: inherit
 ---
@@ -15,6 +15,7 @@ Sebelum mulai, **baca `ARCHITECTURE.md`** (§2, §3, §4, §5).
 
 Tentukan mode dari permintaan pemanggil:
 - **Mode brief** → `briefs/batch-latest.md`, dicek terhadap `research/latest.md`.
+- **Mode landing page** → `briefs/lp-sync.md`, dicek terhadap `briefs/batch-latest.md` dan `hooks/policy-terms.json`. Pakai **Rubrik Landing Page** di bawah, bukan rubrik A–E iklan.
 - **Mode aset** → `briefs/assets-ready.md`, dicek terhadap `briefs/batch-latest.md`. Gambar Daekan dan frame video yang disiapkan pemanggil ada di `temp/qa/`. Baca dengan Read lalu nilai visualnya: hook terbaca di frame ≤ 3 detik, safe zone, keterbacaan teks, dan konsistensi brand. Jika tidak ada gambar/frame, tulis `Visual: TIDAK TERSEDIA` dan jangan memberi PASS untuk dimensi A pada video.
 
 Jika pemanggil menyertakan **PERINGATAN quality gate** (`hooks/scripts/brief-gate.mjs`), setiap peringatan WAJIB ditanggapi di Temuan: sebut apakah itu risiko nyata atau false positive, beserta alasannya.
@@ -62,9 +63,40 @@ Tandai risiko berikut:
 - Mode aset: setiap gambar punya `daekan_asset_url`, setiap video punya `render_path` hasil Remotion dan hanya memakai aset Daekan, estimasi token tercatat dan dikonfirmasi user, resolusi sesuai (1080×1920 untuk 9:16, 1080×1350 untuk 4:5).
 - Tidak ada kredensial/token di file.
 
+## Rubrik Landing Page (mode landing page, per `ad_name` + satu baris LP)
+
+### LP-A. Message-match (skor 1–5 per `ad_name`)
+- Hook/janji utama iklan di brief muncul dengan makna dan kata kunci yang sama di headline/sub-headline **above-the-fold** LP final. "LP final" = copy hasil revisi jika draf sudah dieksekusi, atau LP live jika tidak ada revisi.
+- Verifikasi sendiri skor dari `lp-strategist` dan `message_match_score` di file. Jika kamu menilai berbeda, pakai penilaianmu dan tulis alasannya.
+- CTA LP konsisten dengan CTA iklan. Hero visual mendukung angle iklan.
+
+### LP-B. Konsistensi brand, visual & offer
+- Palet, font, dan gaya di `## Visual & Palet` konsisten dengan prompt visual iklan di brief.
+- Harga, bonus, garansi, dan testimoni di `## Offer & Order Bump` **sama persis** dengan `### Produk & Landing Page` di brief.
+- Order bump relevan, harganya jelas, dan tidak menyesatkan.
+
+### LP-C. Kontrak & URL (cek mekanis, wajib lolos 100%)
+- `batch_id` di `lp-sync.md` **sama** dengan `briefs/batch-latest.md`.
+- `phase: landing-page` dan `source_file: briefs/batch-latest.md`.
+- `landing_page_url` berupa URL http(s) **bersih**, dan string `utm_` tidak muncul sama sekali (§5 butir 11). Hal yang sama berlaku untuk `lp_draft_url` dan semua URL lain di file.
+- `landing_page_url` adalah URL live yang akan menjadi destination. Jika `lp_publish_status: draft`, tulis di Catatan bahwa user harus publish sebelum Fase 4.
+
+### LP-D. Kepatuhan policy (`hooks/policy-terms.json`)
+- Baca `hooks/policy-terms.json`. Periksa copy LP final (blueprint/above-the-fold baru) **dan** klaim LP live yang masih berlaku terhadap pola `high` dan `medium`, ditambah kategori dimensi D di atas.
+- Frasa `high` yang masih ada di LP final → risiko tinggi → `FAIL`.
+- Kutipan di `## Audit LP Saat Ini` yang sudah direvisi di LP final bukan pelanggaran, tetapi wajib disebut di Temuan sebagai "sudah direvisi".
+
+### LP-E. Meta Pixel & tracking (wajib lolos 100%)
+- `meta_pixel_status` = `active`.
+- `meta_pixel_id` sama dengan `meta_pixel_id` di brief.
+- `Purchase` terpicu di halaman sukses bayar atau saat pembayaran terkonfirmasi, bukan di klik tombol. `InitiateCheckout` tercatat.
+- Tidak ada kredensial/token di file.
+
+Untuk mode landing page, tabel verdict memakai kolom `ad_name | LP-A Match | LP-B Brand/Offer | LP-C Kontrak/URL | LP-D Policy | LP-E Pixel | Verdict`, satu baris per `ad_name`. **Verdict batch: PASS** hanya boleh diberikan jika LP-C dan LP-E lolos penuh, LP-D tanpa risiko tinggi, LP-A ≥ 4 untuk **semua** `ad_name`, dan LP-B ≥ 4.
+
 ## Aturan verdict
 
-Per item:
+Per item (mode brief & aset; mode landing page memakai padanan LP-A s.d. LP-E dengan aturan PASS di atas):
 - **PASS**: C dan E lolos penuh, D tanpa risiko, A ≥ 4, B ≥ 4.
 - **REVISE**: C dan E lolos, D tanpa risiko tinggi, tetapi A atau B ≤ 3, atau ada risiko policy ringan yang bisa diperbaiki dengan penyuntingan copy.
 - **FAIL**: ada pelanggaran C atau E, risiko policy tinggi di D, atau kontrak file tidak terpenuhi.

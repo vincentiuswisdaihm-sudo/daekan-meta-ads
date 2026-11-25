@@ -8,23 +8,27 @@ Kata **WAJIB**, **DILARANG**, dan **BOLEH** dipakai dalam arti normatif.
 
 ## 1. Ikhtisar & Dependensi
 
-Plugin ini menyatukan empat fase kerja Meta Advertiser produk digital:
+Plugin ini menyatukan lima fase kerja Meta Advertiser produk digital:
 
 ```
-Fase 1 RISET ──► Fase 2 STRATEGI ──► Fase 3 PRODUKSI ──► Fase 4 LAUNCH
-research/latest.md   briefs/batch-latest.md   briefs/assets-ready.md   reports/launch-log.md
+Fase 1 RISET ──► Fase 2 STRATEGI ──► Fase 2B LANDING PAGE ──► Fase 3 PRODUKSI ──► Fase 4 LAUNCH
+research/        briefs/             briefs/                  briefs/             reports/
+latest.md        batch-latest.md     lp-sync.md               assets-ready.md     launch-log.md
 ```
+
+Fase 2B dan Fase 3 sama-sama membutuhkan `briefs/batch-latest.md` yang approved. Fase 3 membaca `briefs/lp-sync.md` jika sudah ada. Fase 4 mewajibkan keduanya.
 
 ### 1.1 Dependensi eksternal (tidak dibundel di plugin ini)
 
 | Dependensi | Jenis | Dipakai untuk |
 |---|---|---|
 | **Meta Ads MCP** | MCP server (sudah aktif di environment user) | Baca performa & fatigue; membuat campaign/ad set/creative/ad (selalu PAUSED) |
-| **Daekan Katalisa MCP** | MCP server (sudah aktif di environment user) | Data order & laporan penjualan per UTM; **AI Image Generator Daekan** |
+| **Daekan Katalisa MCP** | MCP server (sudah aktif di environment user) | Data order & laporan penjualan per UTM; produk, landing page (draf), Meta Pixel, order bump; **AI Image Generator Daekan** |
 | **Remotion** | Plugin Claude Code (`remotion:*` skills) | Produksi semua video ads |
 | `last30days` | Skill eksternal (opsional) | Riset kompetitor & tren 30 hari terakhir |
 | `claude-ads` | Skill eksternal (opsional) | Checklist audit akun/campaign Meta Ads |
-| `marketingskills` (`ad-creative`, `offers`, `cro`) | Skill eksternal (opsional) | Kerangka angle, offer, dan CRO |
+| `marketingskills` (`ad-creative`, `offers`, `cro`, `copywriting`) | Skill eksternal (opsional) | Kerangka angle, offer, CRO, dan copy landing page |
+| `ui-ux-pro-max` | Skill eksternal (opsional) | Struktur seksi & design system landing page |
 | `agency-agents` (`Ad Creative Strategist`, `Image Prompt Engineer`) | Persona/standar eksternal (opsional) | Standar kualitas copy & prompt visual |
 
 Plugin ini **tidak** menyertakan `.mcp.json`. Kedua MCP server sudah dikonfigurasi di environment user, dan konfigurasi duplikat akan bentrok.
@@ -44,7 +48,8 @@ Plugin ini **tidak** menyertakan `.mcp.json`. Kedua MCP server sudah dikonfigura
 | Fase | File output | Penulis | Gate QA | Pembaca berikutnya |
 |---|---|---|---|---|
 | 1. Riset | `research/latest.md` | `ads-researcher` | — | `creative-strategist` |
-| 2. Strategi | `briefs/batch-latest.md` | `creative-strategist` | `creative-qa` (brief) | Fase Produksi |
+| 2. Strategi | `briefs/batch-latest.md` | `creative-strategist` | `creative-qa` (brief) | Fase 2B, Fase Produksi |
+| 2B. Landing Page | `briefs/lp-sync.md` | `lp-strategist` (audit/blueprint) + Fase 2B (eksekusi draf Daekan setelah konfirmasi user) | `creative-qa` (message-match, bebas UTM hardcode, status Meta Pixel) | Fase 3 (`3-produksi`), Fase 4 (`4-launch`) |
 | 3. Produksi | `briefs/assets-ready.md` | Fase Produksi (Daekan + Remotion) | `creative-qa` (aset) | Fase Launch |
 | 4. Launch | `reports/launch-log.md` | Fase Launch (Meta Ads MCP) | — | `ads-researcher` (siklus berikutnya) |
 
@@ -53,7 +58,7 @@ Plugin ini **tidak** menyertakan `.mcp.json`. Kedua MCP server sudah dikonfigura
 ```yaml
 ---
 batch_id: b261125            # format bYYMMDD, lihat §3.4
-phase: research | strategy | production | launch
+phase: research | strategy | landing-page | production | launch
 status: draft | approved | rejected
 generated_at: 2026-11-25T10:00:00+07:00   # ISO 8601
 generated_by: ads-researcher              # nama subagent/skill penulis
@@ -63,10 +68,18 @@ source_file: research/latest.md           # file input fase sebelumnya (null unt
 
 ### 2.3 Aturan gate
 
-1. Fase N+1 **DILARANG** dimulai jika file output fase N tidak ada, `batch_id`-nya berbeda, atau `status != approved`.
-2. `status: approved` pada `briefs/batch-latest.md` dan `briefs/assets-ready.md` hanya boleh di-set setelah `creative-qa` memberi verdict `PASS` untuk semua item **dan** user menyetujui.
+1. Fase N+1 **DILARANG** dimulai jika file output fase N tidak ada, `batch_id`-nya berbeda, atau `status != approved`. Ketergantungan per fase:
+
+   | Fase | Wajib approved (`batch_id` sama) | Dibaca bila ada |
+   |---|---|---|
+   | 2 | `research/latest.md` | — |
+   | 2B | `briefs/batch-latest.md` | — |
+   | 3 | `briefs/batch-latest.md` | `briefs/lp-sync.md` |
+   | 4 | `briefs/assets-ready.md` **dan** `briefs/lp-sync.md` | — |
+
+2. `status: approved` pada `briefs/batch-latest.md`, `briefs/lp-sync.md`, dan `briefs/assets-ready.md` hanya boleh di-set setelah `creative-qa` memberi verdict `PASS` untuk semua item **dan** user menyetujui. Untuk `briefs/lp-sync.md` ada syarat tambahan: `meta_pixel_status` harus `active`.
 3. `research/latest.md` boleh di-set `approved` oleh user setelah membaca ringkasannya.
-4. **Arsip:** sebelum menimpa file `latest`/`batch-latest`/`assets-ready`, salin versi lama ke `<dir>/archive/<batch_id>.md` (mis. `briefs/archive/b261118-batch.md`, `briefs/archive/b261118-assets.md`, `research/archive/b261118.md`).
+4. **Arsip:** sebelum menimpa file `latest`/`batch-latest`/`lp-sync`/`assets-ready`, salin versi lama ke `<dir>/archive/<batch_id>.md` (mis. `briefs/archive/b261118-batch.md`, `briefs/archive/b261118-lp.md`, `briefs/archive/b261118-assets.md`, `research/archive/b261118.md`).
 5. `reports/launch-log.md` bersifat **append-only**. Setiap launch menambah satu section `## <batch_id> — <tanggal>`. Entri lama DILARANG diubah.
 
 ### 2.4 Section wajib per file
@@ -90,8 +103,20 @@ source_file: research/latest.md           # file input fase sebelumnya (null unt
 5. `## Storyboard Remotion`: untuk konsep video, berisi scene, durasi, teks overlay, dan aset Daekan yang dipakai.
 6. `## Hasil QA`: diisi dari verdict `creative-qa`.
 
+**`briefs/lp-sync.md`** (Fase 2B)
+Front-matter: `phase: landing-page`, `source_file: briefs/batch-latest.md`, dan `batch_id` sama dengan brief.
+1. `## Landing Page`: `product_id`, `landing_page_url` (URL live yang akan dipakai sebagai destination; **bersih tanpa UTM**), `lp_page_id`, `lp_publish_status` (`published` | `draft`), `lp_draft_url` (jika ada draf revisi).
+2. `## Audit LP Saat Ini`: snapshot LP live sebelum revisi, verbatim. Isinya headline & sub-headline above-the-fold, CTA, struktur seksi, offer, dan klaim berisiko.
+3. `## Message-Match`: baris `message_match_score: <0–100>` + tabel `ad_name | janji/hook iklan | above-the-fold LP | skor (1–5) | gap | aksi`, satu baris per `ad_name` di brief. Target: 100%.
+4. `## Offer & Order Bump`: harga normal/promo, value stack, bonus, garansi, dan `order_bump` (produk, harga, posisi di checkout). Harus konsisten dengan `### Produk & Landing Page` di brief.
+5. `## Blueprint & Revisi LP`: struktur seksi (hero → problem → solusi → offer stack → bukti → garansi → FAQ → CTA), copy above-the-fold yang selaras dengan hook iklan, dan daftar revisi beserta prioritasnya.
+6. `## Visual & Palet`: token warna (hex), font, gaya visual, dan tabel `prompt | daekan_asset_url | rasio | dipakai_oleh` untuk hero image (4:3) / product mockup dari Daekan (maks 4, §4.1).
+7. `## Pixel & Tracking`: `meta_pixel_id`, `meta_pixel_status` (`active` | `inactive` | `unknown`), `purchase_event` (event & halaman/trigger, mis. Purchase di halaman sukses bayar), `initiate_checkout`, dan kecocokan dengan dataset di ad account Meta.
+8. `## Eksekusi Daekan`: log tindakan di Daekan (draf dibuat/diedit, selalu DRAFT; publish hanya atas perintah eksplisit user), konfirmasi user, serta estimasi vs konsumsi token.
+9. `## Hasil QA`: diisi dari verdict `creative-qa` (mode landing page).
+
 **`briefs/assets-ready.md`** (Fase 3)
-1. `## Aset Daekan`: tabel `prompt | daekan_asset_url | rasio | dipakai_oleh`, satu baris per gambar hasil AI Image Generator Daekan (maks 4). URL = URL Asset Library Daekan.
+1. `## Aset Daekan`: tabel `prompt | daekan_asset_url | rasio | dipakai_oleh`, satu baris per gambar hasil AI Image Generator Daekan (maks 4). URL = URL Asset Library Daekan. Aset dari `lp-sync.md` yang dipakai ulang ditulis dengan `prompt` berawalan `lp-` (mis. `lp-hero`) dan tidak dihitung dalam batas 4 (§4.1).
 2. `## Manifest Aset`: tabel `ad_name | format | engine | daekan_asset_url | render_path | durasi | rasio | status`, satu baris per ad. `engine` ∈ `daekan` (static) | `remotion` (video). Untuk video, `daekan_asset_url` berisi URL Daekan yang dipakai di dalam video. `status` ∈ `pending` | `ready` | `failed`.
 3. `## Estimasi & Konsumsi Token Daekan`: estimasi yang dikonfirmasi user vs aktual.
 4. `## Catatan Render Remotion`: composition id, resolusi, fps, durasi, path props.
@@ -118,6 +143,16 @@ Agar bisa diperiksa otomatis, nilai UTM di file `briefs/` WAJIB ditulis dalam sa
 - **Kolom tabel** dengan header persis `ad_name`, `utm_content`, `utm_campaign`, atau `utm_term`.
 
 Pola contoh yang memakai `{...}` atau `<...>` tidak divalidasi. Nilai `PENDING`, `-`, dan `n/a` dianggap placeholder.
+
+Di `briefs/lp-sync.md`, key berikut WAJIB ditulis sebagai deklarasi key-value:
+
+```markdown
+- landing_page_url: `https://toko.daekan.id/ebook-ads101`
+- lp_publish_status: `published`
+- message_match_score: `95`
+- meta_pixel_id: `123456789012345`
+- meta_pixel_status: `active`
+```
 
 ---
 
@@ -205,11 +240,14 @@ Contoh **tidak valid**: `Ebook Ads101 - Sales` (spasi, huruf besar), `ebook_ads1
 
 ### 4.1 Gambar: AI Image Generator Daekan
 
-1. Prompt diambil dari section `## Prompt Visual Daekan` di `briefs/batch-latest.md` yang `status: approved`.
-2. **Sebelum generate**, WAJIB menampilkan ke user: jumlah gambar, rasio tiap gambar, dan **estimasi token Daekan**, lalu menunggu **konfirmasi eksplisit** ("ya"/"lanjut"). Tanpa konfirmasi, DILARANG generate.
-3. **Maksimal 4 gambar per batch.** Kebutuhan lebih dari 4 dipecah ke batch konfirmasi berikutnya.
-4. Setiap hasil dicatat di `briefs/assets-ready.md` dengan `daekan_asset_url` dan `ad_name` tujuan.
+1. Sumber prompt:
+   - Gambar iklan: `## Prompt Visual Daekan` di `briefs/batch-latest.md` yang `status: approved`.
+   - Hero image (4:3) & product mockup landing page: `## Blueprint & Revisi LP` / `## Visual & Palet` di `briefs/lp-sync.md` (Fase 2B).
+2. **Sebelum generate**, WAJIB menampilkan ke user: jumlah gambar, rasio tiap gambar, dan **estimasi token Daekan**, lalu menunggu **konfirmasi eksplisit** ("ya"/"lanjut"). Tanpa konfirmasi, DILARANG generate. Aturan ini juga berlaku untuk hero image & mockup LP.
+3. **Maksimal 4 gambar per batch**, dihitung per fase: maksimal 4 di Fase 2B dan maksimal 4 di Fase 3. Kebutuhan lebih dari 4 dipecah ke batch konfirmasi berikutnya.
+4. Setiap hasil dicatat dengan `daekan_asset_url` dan tujuan pemakaiannya: aset iklan di `briefs/assets-ready.md`, aset LP di `briefs/lp-sync.md`.
 5. Regenerate dihitung sebagai generate baru, jadi wajib konfirmasi lagi dan tetap tunduk pada batas 4 gambar.
+6. Fase 3 BOLEH memakai ulang hero/mockup dari `briefs/lp-sync.md` tanpa generate ulang. Baris aset tersebut ditulis dengan `prompt` berawalan `lp-` dan tidak dihitung dalam batas 4 Fase 3.
 
 ### 4.2 Video: Remotion
 
@@ -232,6 +270,10 @@ Contoh **tidak valid**: `Ebook Ads101 - Sales` (spasi, huruf besar), `ebook_ads1
 5. Subagent `ads-researcher` dan `creative-qa` bersifat **read-only** terhadap Meta Ads MCP dan Daekan Katalisa MCP. Mereka DILARANG memanggil tool create/update/delete/activate/generate.
 6. Kredensial (token, API key, access token Meta) **DILARANG** ditulis ke repo, ke file kontrak, atau ke log. File CSV klien dan render video tidak di-commit (lihat `.gitignore`).
 7. Sebelum launch, Meta Pixel produk WAJIB terverifikasi aktif di Daekan dan terhubung ke ad account. Rencana launch (nama, budget, targeting, aset, `url_tags`) WAJIB dikonfirmasi user sebelum tool create pertama dipanggil.
+8. Subagent `lp-strategist` bersifat **read-only** terhadap Daekan Katalisa MCP dan Meta Ads MCP. Ia DILARANG memanggil tool create/update/delete/publish/activate/generate.
+9. Pembuatan atau pengeditan landing page di Daekan Katalisa MCP **WAJIB berstatus DRAFT**. DILARANG publish otomatis. Publish hanya boleh atas perintah eksplisit user di percakapan, terpisah dari persetujuan membuat draf.
+10. Cetak hero image (4:3) atau product mockup di Daekan WAJIB menampilkan estimasi token dan menunggu konfirmasi user (§4.1).
+11. URL landing page yang dicatat di `briefs/lp-sync.md` WAJIB berupa URL bersih **tanpa parameter UTM hardcode**. String `utm_` tidak boleh muncul sama sekali. UTM tetap dipasang lewat `url_tags` dinamis Meta (§3.2).
 
 ---
 
@@ -244,12 +286,18 @@ Contoh **tidak valid**: `Ebook Ads101 - Sales` (spasi, huruf besar), `ebook_ads1
 | `hooks/policy-terms.json` | Daftar pola regex kata rawan Meta Ads Policy: `high` → error, `medium` → peringatan. Boleh disesuaikan per niche. |
 
 Yang diperiksa:
-1. Front-matter wajib (§2.2) dan nilai `status`.
-2. Semua nilai UTM (§2.5) terhadap regex, jumlah token, enum, panjang, sufiks `- Copy`, dan kecocokan `batch_id`.
-3. URL berisi UTM hardcode (§3.2).
-4. Kata rawan policy di seluruh file, kecuali section `## Hasil QA`, baris `Negative prompt:`, blok kode, dan baris yang memuat `qa-ignore`.
-5. Batas 4 gambar Daekan (§4.1), engine yang diizinkan, dan kelengkapan URL/path saat `approved` (§4).
-6. `status: approved` hanya sah jika `## Hasil QA` berisi `Verdict batch: PASS` (§2.3).
+1. Front-matter wajib (§2.2), nilai `status`, dan nilai `phase`. Nama file harus cocok dengan phase-nya: `batch-latest.md` → `strategy`, `lp-sync.md` → `landing-page`, `assets-ready.md` → `production`.
+2. `batch_id` di `lp-sync.md` dan `assets-ready.md` harus sama dengan `briefs/batch-latest.md` di folder yang sama.
+3. Semua nilai UTM (§2.5) terhadap regex, jumlah token, enum, panjang, sufiks `- Copy`, dan kecocokan `batch_id`.
+4. URL berisi UTM hardcode (§3.2).
+5. Kata rawan policy di seluruh file, kecuali section `## Hasil QA`, baris `Negative prompt:`, blok kode, dan baris yang memuat `qa-ignore`.
+6. Batas 4 gambar Daekan (§4.1), engine yang diizinkan, dan kelengkapan URL/path saat `approved` (§4). Baris `lp-…` di Fase 3 tidak dihitung dalam batas.
+7. **Khusus `phase: landing-page`:**
+   - `source_file` harus `briefs/batch-latest.md`.
+   - `landing_page_url` wajib ada, berupa http(s), dan **tidak mengandung `utm_`**.
+   - Frasa rawan di `## Audit LP Saat Ini` hanya menjadi PERINGATAN selama `draft` (kutipan LP lama), dan menjadi ERROR saat `approved`.
+   - Saat `approved`: `meta_pixel_status` wajib `active`.
+8. `status: approved` hanya sah jika `## Hasil QA` berisi `Verdict batch: PASS` (§2.3), untuk `strategy`, `landing-page`, dan `production`.
 
 Perilaku: ERROR → hook keluar dengan kode 2 dan laporannya dikirim ke Claude untuk diperbaiki. PERINGATAN saja → dikirim sebagai konteks tambahan tanpa memblokir.
 
@@ -263,7 +311,8 @@ Penulisan lewat Bash tidak memicu hook. Karena itu setiap skill WAJIB juga menja
 |---|---|---|---|---|
 | `/daekan-meta-ads:1-riset` | 1 | Kedua MCP tersedia | `ads-researcher` | `research/latest.md` |
 | `/daekan-meta-ads:2-strategi` | 2 | `research/latest.md` ada & approved | `creative-strategist`, `creative-qa` | `briefs/batch-latest.md` |
-| `/daekan-meta-ads:3-produksi` | 3 | `briefs/batch-latest.md` approved + gate lolos | `creative-qa` | `briefs/assets-ready.md` + `renders/` |
-| `/daekan-meta-ads:4-launch` | 4 | `briefs/assets-ready.md` ada & approved + gate lolos + pixel aktif | — | Entitas Meta PAUSED + `reports/launch-log.md` |
+| `/daekan-meta-ads:2b-landing-page` | 2B | `briefs/batch-latest.md` approved + gate lolos | `lp-strategist`, `creative-qa` | `briefs/lp-sync.md` (+ draf LP & hero/mockup di Daekan) |
+| `/daekan-meta-ads:3-produksi` | 3 | `briefs/batch-latest.md` approved + gate lolos (membaca `lp-sync.md` bila ada) | `creative-qa` | `briefs/assets-ready.md` + `renders/` |
+| `/daekan-meta-ads:4-launch` | 4 | `briefs/assets-ready.md` & `briefs/lp-sync.md` approved (`batch_id` sama) + gate lolos + pixel aktif + LP published | — | Entitas Meta PAUSED + `reports/launch-log.md` |
 
-Skill 3 dan 4 memakai `disable-model-invocation: true`: hanya berjalan jika user memanggilnya langsung, karena keduanya memakai token Daekan atau membuat entitas di Meta.
+Skill 2B, 3, dan 4 memakai `disable-model-invocation: true`: hanya berjalan jika user memanggilnya langsung, karena ketiganya memakai token Daekan, membuat draf di Daekan, atau membuat entitas di Meta.
