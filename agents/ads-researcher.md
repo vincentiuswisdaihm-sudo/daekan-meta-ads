@@ -55,13 +55,16 @@ Untuk tiap ad fatigue, tulis angka pendukungnya. Jangan hanya menulis label.
   - Order tanpa UTM (hitung jumlah dan revenue-nya).
 
 ### 5. Riset kompetitor & tren (30 hari)
-- Gunakan skill `last30days` untuk tren, pembahasan, dan kompetitor di niche produk.
+- Gunakan skill `last30days:last30days` (dependensi plugin, terpasang otomatis) untuk tren, pembahasan, dan kompetitor di niche produk.
 - Jika tersedia, lengkapi dengan Meta Ad Library (mis. `ads_library_search`): angle, hook, format, dan offer yang dipakai kompetitor, serta durasi iklan berjalan (iklan yang lama berjalan cenderung profitable).
-- Jika skill tidak terpasang, tulis `TIDAK TERSEDIA: last30days`.
+- Jika dependensi tidak aktif atau sumbernya butuh API key yang belum diset, tulis `TIDAK TERSEDIA: last30days (<alasan>)`.
 
 ### 6. Audit checklist
-- Jalankan checklist audit dari skill `claude-ads` (struktur akun, tracking/pixel/CAPI, konsolidasi ad set, kreatif per ad set, learning phase, budget, overlap audiens, dll.).
-- Tulis per item: ✅ / ⚠️ / ❌ beserta bukti singkat. Jika skill tidak terpasang, tulis `TIDAK TERSEDIA: claude-ads` dan jalankan pemeriksaan minimal: tracking pixel, pelanggaran penamaan UTM, dan ad set dalam learning limited.
+- Baca katalog kontrol audit Meta Ads dari claude-ads yang dibundel di `references/claude-ads/meta-audit.md` (Read, relatif ke root plugin `${CLAUDE_PLUGIN_ROOT}`). Katalog ini mencakup struktur akun, Pixel/CAPI, atribusi, keragaman & fatigue kreatif, audiens, placement, otomasi, dan kelayakan policy.
+- Evaluasi setiap kontrol yang relevan terhadap data MCP. Tulis per item: ✅ / ⚠️ / ❌ / `unknown` beserta bukti singkat.
+- Ikuti aturannya: hanya kontrol dengan bukti akun yang boleh menjadi temuan. Tidak ada ambang universal yang dipakai tanpa sumber.
+- Bagian katalog yang merujuk alur kerja claude-ads (conductor, schema JSON, adapter, perubahan akun) **tidak berlaku**. Audit ini read-only.
+- Jika file tidak terbaca, tulis `TIDAK TERSEDIA: meta-audit` dan jalankan pemeriksaan minimal: tracking pixel, pelanggaran penamaan UTM, dan ad set dalam learning limited.
 
 ### 7. Tulis `research/latest.md`
 - Jika file lama ada, salin dulu ke `research/archive/<batch_id-lama>.md`.

@@ -25,14 +25,17 @@ Sebelum mulai, **baca `ARCHITECTURE.md`** (§2 kontrak file, §3 UTM, §4 dual-e
 
 ## Kerangka yang dipakai
 
-- **`marketingskills`**:
-  - `ad-creative`: pemilihan angle, struktur hook, dan variasi kreatif.
-  - `offers`: penyusunan offer (value stack, bonus, garansi, urgensi yang jujur, harga/anchor).
-  - `cro`: kesinambungan pesan iklan → landing page (message match, friksi, CTA).
-- **`agency-agents`**:
-  - Standar **Ad Creative Strategist**: satu konsep = satu angle yang jelas, didukung insight dari data.
-  - Standar **Image Prompt Engineer**: prompt visual yang spesifik dan bisa direproduksi.
-- Jika skill tidak terpasang, tulis `TIDAK TERSEDIA: <skill>` di `## Ringkasan Batch` lalu lanjutkan dengan prinsip yang sama.
+Skill di bawah terpasang otomatis sebagai dependensi plugin (lihat `THIRD_PARTY_NOTICES.md`). Panggil lewat tool **Skill** dengan nama ber-namespace:
+
+- **`marketing-skills-core`**:
+  - `marketing-skills-core:product-marketing`: konteks produk/audiens. Baca dulu bila ada `.agents/product-marketing.md`.
+  - `marketing-skills-core:ad-creative`: pemilihan angle, struktur hook, dan variasi kreatif.
+  - `marketing-skills-core:offers`: penyusunan offer (value stack, bonus, garansi, urgensi yang jujur, harga/anchor).
+  - `marketing-skills-core:cro`: kesinambungan pesan iklan → landing page (message match, friksi, CTA).
+- **agency-agents** (referensi dibundel, baca dengan Read relatif ke root plugin `${CLAUDE_PLUGIN_ROOT}`):
+  - `references/agency-agents/ad-creative-strategist.md`: standar **Ad Creative Strategist**; satu konsep = satu angle yang jelas, didukung insight dari data.
+  - `references/agency-agents/image-prompt-engineer.md`: standar **Image Prompt Engineer**; prompt visual yang spesifik dan bisa direproduksi. Prompt yang dihasilkan tetap untuk **AI Image Generator Daekan** (§4.1); nama tool generator lain di file itu tidak berlaku.
+- Jika dependensi tidak aktif (mis. dinonaktifkan user), tulis `TIDAK TERSEDIA: <nama>` di `## Ringkasan Batch` lalu lanjutkan dengan prinsip yang sama.
 
 ## Langkah kerja
 

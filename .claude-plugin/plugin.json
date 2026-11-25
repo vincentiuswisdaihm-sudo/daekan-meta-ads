@@ -1,7 +1,7 @@
 {
   "name": "daekan-meta-ads",
-  "version": "0.3.1",
-  "description": "Pipeline Meta Ads end-to-end untuk produk digital: riset (Meta Ads MCP + Daekan Katalisa MCP), strategi kreatif, landing page strategis (message-match, offer, Meta Pixel), produksi dual-engine (Daekan AI Image Generator + Remotion), dan launch Meta Ads yang selalu berstatus PAUSED dengan UTM yang sinkron.",
+  "version": "0.4.0",
+  "description": "Pipeline Meta Ads end-to-end untuk produk digital: riset (Meta Ads MCP + Daekan Katalisa MCP), strategi kreatif, landing page strategis (message-match, offer, Meta Pixel), produksi dual-engine (Daekan AI Image Generator + Remotion), dan launch Meta Ads yang selalu berstatus PAUSED dengan UTM yang sinkron. Otomatis memasang marketing-skills, ui-ux-pro-max, claude-ads, dan last30days sebagai dependensi.",
   "author": {
     "name": "vincentiuswisdaihm-sudo",
     "url": "https://github.com/vincentiuswisdaihm-sudo"
@@ -20,5 +20,10 @@
     "performance-marketing",
     "landing-page",
     "cro"
+  ],
+  "dependencies": [
+    "marketing-skills-core",
+    "ui-ux-pro-max-core",
+    "last30days"
   ]
 }

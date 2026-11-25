@@ -21,13 +21,21 @@ Semua aturan dikunci di [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - Claude Code ≥ 2.1.275 dan Node.js ≥ 18 (untuk quality gate & Remotion).
 - **Daekan Katalisa MCP** dan **Meta Ads MCP** sudah terhubung di Claude Code. Plugin ini sengaja tidak menyertakan `.mcp.json`.
 - Plugin **Remotion** terpasang.
-- Opsional: skill `last30days`, `claude-ads`, `marketingskills` (`ad-creative`, `offers`, `cro`, `copywriting`), `agency-agents`, `ui-ux-pro-max`. Jika tidak ada, subagent menandai `TIDAK TERSEDIA` dan tidak mengarang data.
+- Skill pendukung **terpasang otomatis** sebagai dependensi (cukup satu perintah install):
+  - `marketing-skills-core`: `product-marketing`, `ad-creative`, `offers`, `cro`, `copywriting`;
+  - `ui-ux-pro-max-core`: `ui-ux-pro-max`, `design-system`;
+  - `last30days`.
+
+  Katalog audit Meta dari claude-ads dan standar agency-agents dibundel di `references/`. Hanya subset yang dipakai pipeline yang dipasang, jadi seluruh dependensi menambah sekitar 1.200 token konteks saja. Rinciannya di [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+- `last30days` bisa memakai API key opsional untuk sebagian sumbernya (lihat repo-nya). Tanpa key, subagent menandai sumber itu `TIDAK TERSEDIA` dan tidak mengarang data.
 
 ## Instalasi
 
 ```
 /plugin install daekan-meta-ads --marketplace vincentiuswisdaihm-sudo/daekan-meta-ads
 ```
+
+Perintah ini juga memasang dependensinya. Jika sebelumnya Anda sudah memasang `marketing-skills`, `ui-ux-pro-max`, atau `last30days` dari marketplace aslinya, skill yang sama bisa muncul dua kali. Copot salah satunya dengan `/plugin uninstall <nama>@<marketplace>`.
 
 Untuk Claude Code versi lama:
 
@@ -80,7 +88,9 @@ Skill 2B, 3, dan 4 hanya berjalan jika Anda memanggilnya langsung.
 agents/           ads-researcher, creative-strategist, lp-strategist, creative-qa
 skills/           1-riset, 2-strategi, 2b-landing-page, 3-produksi, 4-launch
 hooks/            hooks.json, scripts/brief-gate.mjs, policy-terms.json
+references/       salinan referensi pihak ketiga (agency-agents, claude-ads meta-audit)
 ARCHITECTURE.md   kontrak file, UTM, dual-engine, keamanan
+THIRD_PARTY_NOTICES.md  atribusi & commit ter-pin semua komponen pihak ketiga
 ```
 
 ## Lisensi
