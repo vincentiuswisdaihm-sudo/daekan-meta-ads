@@ -1,0 +1,37 @@
+# ── Kredensial & secret ──────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials*.json
+token*.json
+service-account*.json
+*secret*.json
+.claude/settings.local.json
+
+# ── Data klien (CSV export, laporan mentah) ──────────
+*.csv
+*.CSV
+data/clients/
+
+# ── Hasil render video lokal (Remotion) ──────────────
+out/
+renders/
+temp/
+
+# ── Node / Remotion ──────────────────────────────────
+node_modules/
+.remotion/
+
+# ── OS / editor / log ────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# ── File sesi lokal HarnessKit ───────────────────────
+.harnesskit/session-start-time.txt
+.harnesskit/session-logs/

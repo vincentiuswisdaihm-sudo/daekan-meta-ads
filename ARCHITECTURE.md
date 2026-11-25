@@ -1,0 +1,217 @@
+# ARCHITECTURE — `daekan-meta-ads`
+
+Dokumen ini adalah **kontrak** plugin. Semua subagent (`agents/`) dan skill (tahap berikutnya) WAJIB mematuhinya. Jika ada instruksi lain yang bertentangan dengan dokumen ini, dokumen ini yang menang, kecuali user memberi perintah eksplisit di percakapan.
+
+Kata **WAJIB**, **DILARANG**, dan **BOLEH** dipakai dalam arti normatif.
+
+---
+
+## 1. Ikhtisar & Dependensi
+
+Plugin ini menyatukan empat fase kerja Meta Advertiser produk digital:
+
+```
+Fase 1 RISET ──► Fase 2 STRATEGI ──► Fase 3 PRODUKSI ──► Fase 4 LAUNCH
+research/latest.md   briefs/batch-latest.md   briefs/assets-ready.md   reports/launch-log.md
+```
+
+### 1.1 Dependensi eksternal (tidak dibundel di plugin ini)
+
+| Dependensi | Jenis | Dipakai untuk |
+|---|---|---|
+| **Meta Ads MCP** | MCP server (sudah aktif di environment user) | Baca performa & fatigue; membuat campaign/ad set/creative/ad (selalu PAUSED) |
+| **Daekan Katalisa MCP** | MCP server (sudah aktif di environment user) | Data order & laporan penjualan per UTM; **AI Image Generator Daekan** |
+| **Remotion** | Plugin Claude Code (`remotion:*` skills) | Produksi semua video ads |
+| `last30days` | Skill eksternal (opsional) | Riset kompetitor & tren 30 hari terakhir |
+| `claude-ads` | Skill eksternal (opsional) | Checklist audit akun/campaign Meta Ads |
+| `marketingskills` (`ad-creative`, `offers`, `cro`) | Skill eksternal (opsional) | Kerangka angle, offer, dan CRO |
+| `agency-agents` (`Ad Creative Strategist`, `Image Prompt Engineer`) | Persona/standar eksternal (opsional) | Standar kualitas copy & prompt visual |
+
+Plugin ini **tidak** menyertakan `.mcp.json`. Kedua MCP server sudah dikonfigurasi di environment user, dan konfigurasi duplikat akan bentrok.
+
+### 1.2 Aturan fallback
+
+- Nama tool MCP bisa berbeda antar environment. Subagent mencari tool berdasarkan **fungsinya** (mis. "baca entitas & insight iklan", "laporan penjualan per UTM"), bukan nama yang di-hardcode.
+- Jika MCP atau skill opsional tidak tersedia, subagent WAJIB menulis `TIDAK TERSEDIA: <nama>` di section terkait pada file output, lalu melanjutkan dengan data yang ada. **DILARANG mengarang angka, order, atau data kompetitor.**
+- Jika **Meta Ads MCP** atau **Daekan Katalisa MCP** tidak tersedia, fase yang bergantung padanya WAJIB berhenti dan melapor ke user.
+
+---
+
+## 2. Pipeline & Kontrak File antar-Fase
+
+### 2.1 Peta fase
+
+| Fase | File output | Penulis | Gate QA | Pembaca berikutnya |
+|---|---|---|---|---|
+| 1. Riset | `research/latest.md` | `ads-researcher` | — | `creative-strategist` |
+| 2. Strategi | `briefs/batch-latest.md` | `creative-strategist` | `creative-qa` (brief) | Fase Produksi |
+| 3. Produksi | `briefs/assets-ready.md` | Fase Produksi (Daekan + Remotion) | `creative-qa` (aset) | Fase Launch |
+| 4. Launch | `reports/launch-log.md` | Fase Launch (Meta Ads MCP) | — | `ads-researcher` (siklus berikutnya) |
+
+### 2.2 Front-matter wajib (semua file kontrak)
+
+```yaml
+---
+batch_id: b261125            # format bYYMMDD, lihat §3.4
+phase: research | strategy | production | launch
+status: draft | approved | rejected
+generated_at: 2026-11-25T10:00:00+07:00   # ISO 8601
+generated_by: ads-researcher              # nama subagent/skill penulis
+source_file: research/latest.md           # file input fase sebelumnya (null untuk Fase 1)
+---
+```
+
+### 2.3 Aturan gate
+
+1. Fase N+1 **DILARANG** dimulai jika file output fase N tidak ada, `batch_id`-nya berbeda, atau `status != approved`.
+2. `status: approved` pada `briefs/batch-latest.md` dan `briefs/assets-ready.md` hanya boleh di-set setelah `creative-qa` memberi verdict `PASS` untuk semua item **dan** user menyetujui.
+3. `research/latest.md` boleh di-set `approved` oleh user setelah membaca ringkasannya.
+4. **Arsip:** sebelum menimpa file `latest`/`batch-latest`/`assets-ready`, salin versi lama ke `<dir>/archive/<batch_id>.md` (mis. `briefs/archive/b261118-batch.md`, `briefs/archive/b261118-assets.md`, `research/archive/b261118.md`).
+5. `reports/launch-log.md` bersifat **append-only**. Setiap launch menambah satu section `## <batch_id> — <tanggal>`. Entri lama DILARANG diubah.
+
+### 2.4 Section wajib per file
+
+**`research/latest.md`** (Fase 1)
+1. `## Ringkasan Eksekutif`: 3–5 temuan utama + rekomendasi.
+2. `## Performa Meta Ads`: tabel per campaign/ad set/ad: spend, impresi, CTR, CPM, CPC, CPA, ROAS (versi Meta), frequency.
+3. `## Sinyal Creative Fatigue`: daftar ad + alasan (lihat kriteria di `agents/ads-researcher.md`).
+4. `## Penjualan per UTM (Daekan Katalisa)`: tabel order, revenue, dan konversi per triple UTM.
+5. `## Rekonsiliasi Meta ↔ Daekan`: join via triple UTM (§3.5), ROAS aktual vs ROAS Meta, daftar mismatch (UTM tak dikenal, entitas tanpa order, nama yang melanggar regex).
+6. `## Riset Kompetitor & Tren (30 hari)`: hasil `last30days` / Ad Library.
+7. `## Audit Checklist`: hasil checklist `claude-ads`.
+8. `## Peluang & Hipotesis untuk Batch Berikutnya`.
+
+**`briefs/batch-latest.md`** (Fase 2)
+1. `## Ringkasan Batch`: tujuan, produk, offer utama, anggaran indikatif.
+2. `## Struktur Kampanye`: nama campaign (`utm_campaign`) dan ad set (`utm_term`) yang diusulkan.
+3. `## Konsep Kreatif`: satu sub-section per konsep, berisi:
+   `ad_name` (= `utm_content`), angle, offer, hook 3 detik, primary text, headline, description, CTA, format, landing page URL (tanpa UTM; UTM ditambahkan saat launch).
+4. `## Prompt Visual Daekan`: maks 4 prompt gambar per batch (§4.1), masing-masing dengan rasio & `ad_name` tujuan.
+5. `## Storyboard Remotion`: untuk konsep video, berisi scene, durasi, teks overlay, dan aset Daekan yang dipakai.
+6. `## Hasil QA`: diisi dari verdict `creative-qa`.
+
+**`briefs/assets-ready.md`** (Fase 3)
+1. `## Manifest Aset`: tabel `ad_name | format | engine (daekan/remotion) | daekan_asset_url | render_path | durasi | rasio | status`.
+2. `## Estimasi & Konsumsi Token Daekan`: estimasi yang dikonfirmasi user vs aktual.
+3. `## Catatan Render Remotion`: composition id, resolusi, fps, durasi.
+4. `## Hasil QA`: diisi dari verdict `creative-qa`.
+
+**`reports/launch-log.md`** (Fase 4, append-only)
+Per batch:
+1. Tabel `level | nama (= nilai UTM) | meta_id | status | created_at`. Kolom status WAJIB `PAUSED`.
+2. URL tujuan final lengkap dengan `url_tags` (§3.2).
+3. Verifikasi pasca-create: hasil baca ulang status dari Meta Ads MCP.
+4. Catatan: siapa yang boleh mengaktifkan, dan kapan.
+
+---
+
+## 3. Kontrak Penamaan UTM
+
+### 3.1 Prinsip
+
+> **Nama entitas Meta == nilai UTM.**
+> Nama campaign = `utm_campaign`, nama ad set = `utm_term`, nama ad = `utm_content`.
+
+Dengan prinsip ini, URL parameter dinamis Meta otomatis mengisi UTM dari nama entitas. Data performa dari Meta Ads MCP dan laporan penjualan UTM di Daekan Katalisa MCP bisa di-join tanpa tabel mapping manual.
+
+### 3.2 `url_tags` standar (WAJIB di setiap ad)
+
+```
+utm_source={{site_source_name}}&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_term={{adset.name}}&utm_content={{ad.name}}
+```
+
+| Parameter | Nilai | Catatan |
+|---|---|---|
+| `utm_source` | `{{site_source_name}}` | Diisi Meta: `fb`, `ig`, `msg`, `an` |
+| `utm_medium` | `paid_social` | Konstan |
+| `utm_campaign` | `{{campaign.name}}` | Lihat §3.3 |
+| `utm_term` | `{{adset.name}}` | Lihat §3.3 |
+| `utm_content` | `{{ad.name}}` | Lihat §3.3 |
+
+`url_tags` dipasang di field URL parameters pada creative/ad, **bukan** di-hardcode ke link landing page.
+
+### 3.3 Pola nama
+
+| UTM | Level Meta | Pola | Contoh |
+|---|---|---|---|
+| `utm_campaign` | Campaign | `{produk}_{objektif}_{funnel}_{yyyymmdd}` | `ebook-ads101_sales_tof_20261125` |
+| `utm_term` | Ad set | `{audiens}_{geo}_{placement}` | `lal1-buyers_id_advplus` |
+| `utm_content` | Ad | `{batch_id}_{angle}_{hook}_{format}_v{n}` | `b261125_pain-time_h2_vid916_v1` |
+
+### 3.4 Aturan sintaks
+
+- Hanya huruf kecil `a-z`, angka `0-9`, `-` (pemisah **di dalam** token), dan `_` (pemisah **antar** token).
+- Regex validasi (berlaku untuk ketiga nilai):
+
+  ```
+  ^[a-z0-9-]+(_[a-z0-9-]+)*$
+  ```
+
+- Panjang maksimal **100 karakter**.
+- Jumlah token harus sesuai pola: `utm_campaign` = 4, `utm_term` = 3, `utm_content` = 5.
+- Tanpa spasi, tanpa huruf besar, tanpa emoji, tanpa karakter `{ } & ? = / . #`.
+- `batch_id` = `b` + `YYMMDD` tanggal brief dibuat, mis. `b261125`. Jika ada lebih dari satu batch di hari yang sama, tambahkan sufiks: `b261125-2`.
+- `hook` = `h` + nomor urut hook di brief (`h1`, `h2`, ...).
+- Versi `v{n}` dinaikkan untuk iterasi kreatif dengan angle dan hook yang sama.
+
+**Nilai enum:**
+
+| Token | Nilai yang diizinkan |
+|---|---|
+| `objektif` | `sales`, `leads`, `traffic`, `engagement`, `awareness`, `app` |
+| `funnel` | `tof`, `mof`, `bof`, `rt` |
+| `format` | `img11`, `img45`, `img916`, `vid916`, `vid45`, `car` |
+| `placement` | `advplus`, `feed`, `reels`, `stories`, `manual` |
+| `geo` | kode negara ISO-3166 alpha-2 huruf kecil (`id`, `my`, `sg`, ...) atau `multi` |
+
+Contoh **tidak valid**: `Ebook Ads101 - Sales` (spasi, huruf besar), `ebook_ads101_sales` (token `produk` tidak boleh mengandung `_`), `b261125_pain-time_h2_vid916_v1 - Copy` (sufiks duplikasi Meta).
+
+### 3.5 Kunci join Meta ↔ Daekan Katalisa
+
+- Kunci join = triple **(`utm_campaign`, `utm_term`, `utm_content`)**, dicocokkan dengan **(campaign.name, adset.name, ad.name)** di Meta.
+- `utm_source` dipakai untuk breakdown placement, bukan sebagai kunci join.
+- Order Daekan tanpa UTM atau dengan UTM yang melanggar regex dicatat sebagai **mismatch** di `research/latest.md`, bukan dibuang.
+
+### 3.6 Larangan
+
+- **DILARANG** me-rename campaign/ad set/ad yang sudah pernah live, karena histori UTM di Daekan akan terputus. Untuk perubahan, buat entitas baru atau naikkan `v{n}`.
+- **DILARANG** menyimpan entitas hasil duplikasi Meta dengan sufiks `- Copy`. Rename ke pola yang valid sebelum launch.
+- **DILARANG** memakai UTM berbeda di link landing page yang menimpa `url_tags`.
+
+---
+
+## 4. Aturan Produksi Dual-Engine
+
+| Jenis aset | Engine WAJIB | Engine DILARANG |
+|---|---|---|
+| Gambar iklan (single image, carousel card), hero image, product mockup | **AI Image Generator Daekan** (via Daekan Katalisa MCP) | Generator gambar lain (Higgsfield, ElevenLabs, Figma, Canva AI, DALL·E, dll.) |
+| Video ads 9:16 (Reels/Stories) dan 4:5 (Feed) | **Remotion** | Generator video AI lain, editor manual di luar pipeline |
+
+### 4.1 Gambar: AI Image Generator Daekan
+
+1. Prompt diambil dari section `## Prompt Visual Daekan` di `briefs/batch-latest.md` yang `status: approved`.
+2. **Sebelum generate**, WAJIB menampilkan ke user: jumlah gambar, rasio tiap gambar, dan **estimasi token Daekan**, lalu menunggu **konfirmasi eksplisit** ("ya"/"lanjut"). Tanpa konfirmasi, DILARANG generate.
+3. **Maksimal 4 gambar per batch.** Kebutuhan lebih dari 4 dipecah ke batch konfirmasi berikutnya.
+4. Setiap hasil dicatat di `briefs/assets-ready.md` dengan `daekan_asset_url` dan `ad_name` tujuan.
+5. Regenerate dihitung sebagai generate baru, jadi wajib konfirmasi lagi dan tetap tunduk pada batas 4 gambar.
+
+### 4.2 Video: Remotion
+
+1. Semua video ads WAJIB dibuat sebagai composition Remotion:
+   - **9:16** Reels/Stories: 1080×1920
+   - **4:5** Feed: 1080×1350
+   - 30 fps, durasi mengikuti storyboard (disarankan 6–30 detik).
+2. Seluruh visual di video WAJIB memakai **URL aset dari Daekan** yang tercatat di `briefs/assets-ready.md`. Aset visual dari sumber lain tidak boleh dipakai.
+3. Hook harus terbaca jelas di **3 detik pertama**. Teks overlay berada di dalam safe zone (hindari ±14% atas dan ±20% bawah pada 9:16).
+4. Output render disimpan lokal di `out/` atau `renders/` (di-gitignore). Path render dicatat di `briefs/assets-ready.md`.
+
+---
+
+## 5. Aturan Keamanan
+
+1. **Semua campaign, ad set, dan ad baru yang dibuat lewat Meta Ads MCP WAJIB berstatus `PAUSED`.** Status diset eksplisit di setiap call create, tidak bergantung pada default.
+2. **DILARANG** memanggil tool aktivasi (mis. `ads_activate_entity`) atau mengubah status ke `ACTIVE` tanpa perintah eksplisit user di percakapan untuk entitas tersebut.
+3. Setelah create, WAJIB membaca ulang status entitas dari Meta Ads MCP dan mencatatnya di `reports/launch-log.md`. Jika status bukan `PAUSED`, segera ubah ke `PAUSED` lalu laporkan ke user.
+4. Perubahan budget, bid, atau penghapusan entitas yang sudah ada WAJIB dikonfirmasi user terlebih dahulu.
+5. Subagent `ads-researcher` dan `creative-qa` bersifat **read-only** terhadap Meta Ads MCP dan Daekan Katalisa MCP. Mereka DILARANG memanggil tool create/update/delete/activate/generate.
+6. Kredensial (token, API key, access token Meta) **DILARANG** ditulis ke repo, ke file kontrak, atau ke log. File CSV klien dan render video tidak di-commit (lihat `.gitignore`).
