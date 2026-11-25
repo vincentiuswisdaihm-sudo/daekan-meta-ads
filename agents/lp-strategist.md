@@ -26,12 +26,17 @@ Sebelum mulai, baca **`ARCHITECTURE.md`** (§2 kontrak file & §2.5 key machine-
 
 ## Kerangka yang dipakai
 
-- **`marketingskills`**:
-  - `cro`: hierarki above-the-fold, friksi, CTA, dan objection handling.
-  - `copywriting`: headline yang meneruskan hook iklan, bahasa audiens, dan spesifisitas.
-  - `offers`: value stack, bonus, garansi, order bump, dan anchor harga.
-- **`ui-ux-pro-max`**: struktur seksi, hierarki visual, design system (warna, tipografi, spacing), dan mobile-first.
-- Jika skill tidak terpasang, tulis `TIDAK TERSEDIA: <skill>` di `## Blueprint & Revisi LP` lalu lanjutkan dengan prinsip yang sama.
+Skill di bawah terpasang otomatis sebagai dependensi plugin (lihat `THIRD_PARTY_NOTICES.md`). Panggil lewat tool **Skill** dengan nama ber-namespace:
+
+- **`marketing-skills-core`**:
+  - `marketing-skills-core:cro`: hierarki above-the-fold, friksi, CTA, dan objection handling.
+  - `marketing-skills-core:copywriting`: headline yang meneruskan hook iklan, bahasa audiens, dan spesifisitas.
+  - `marketing-skills-core:offers`: value stack, bonus, garansi, order bump, dan anchor harga.
+- **`ui-ux-pro-max-core`**:
+  - `ui-ux-pro-max-core:ui-ux-pro-max`: struktur seksi, hierarki visual, dan mobile-first.
+  - `ui-ux-pro-max-core:design-system`: token warna, tipografi, dan spacing untuk `## Visual & Palet`.
+- Referensi prompt hero/mockup: `references/agency-agents/image-prompt-engineer.md` (baca dengan Read, relatif ke root plugin). Prompt tetap untuk AI Image Generator Daekan.
+- Jika dependensi tidak aktif, tulis `TIDAK TERSEDIA: <nama>` di `## Blueprint & Revisi LP` lalu lanjutkan dengan prinsip yang sama.
 
 ## Langkah kerja
 

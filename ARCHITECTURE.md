@@ -25,18 +25,22 @@ Fase 2B dan Fase 3 sama-sama membutuhkan `briefs/batch-latest.md` yang approved.
 | **Meta Ads MCP** | MCP server (sudah aktif di environment user) | Baca performa & fatigue; membuat campaign/ad set/creative/ad (selalu PAUSED) |
 | **Daekan Katalisa MCP** | MCP server (sudah aktif di environment user) | Data order & laporan penjualan per UTM; produk, landing page (draf), Meta Pixel, order bump; **AI Image Generator Daekan** |
 | **Remotion** | Plugin Claude Code (`remotion:*` skills) | Produksi semua video ads |
-| `last30days` | Skill eksternal (opsional) | Riset kompetitor & tren 30 hari terakhir |
-| `claude-ads` | Skill eksternal (opsional) | Checklist audit akun/campaign Meta Ads |
-| `marketingskills` (`ad-creative`, `offers`, `cro`, `copywriting`) | Skill eksternal (opsional) | Kerangka angle, offer, CRO, dan copy landing page |
-| `ui-ux-pro-max` | Skill eksternal (opsional) | Struktur seksi & design system landing page |
-| `agency-agents` (`Ad Creative Strategist`, `Image Prompt Engineer`) | Persona/standar eksternal (opsional) | Standar kualitas copy & prompt visual |
+| `marketing-skills-core` (`product-marketing`, `ad-creative`, `offers`, `cro`, `copywriting`) | **Dependensi plugin (otomatis)**, subset dari `coreyhaines31/marketingskills` | Kerangka angle, offer, CRO, dan copy landing page |
+| `ui-ux-pro-max-core` (`ui-ux-pro-max`, `design-system`) | **Dependensi plugin (otomatis)**, subset dari `nextlevelbuilder/ui-ux-pro-max-skill` | Struktur seksi & design system landing page |
+| `last30days` | **Dependensi plugin (otomatis)**, plugin utuh dari `mvanhorn/last30days-skill` | Riset kompetitor & tren 30 hari terakhir |
+| `references/claude-ads/meta-audit.md` | **Referensi dibundel**, dari `AgriciDaniel/claude-ads` | Katalog kontrol audit Meta Ads (read-only) |
+| `references/agency-agents/*.md` (`Ad Creative Strategist`, `Image Prompt Engineer`) | **Referensi dibundel**, dari `msitarzewski/agency-agents` | Standar kualitas copy & prompt visual |
+
+Semua komponen pihak ketiga berlisensi MIT dan di-pin ke commit tertentu (lihat `THIRD_PARTY_NOTICES.md`). Dependensi didaftarkan di `.claude-plugin/marketplace.json` lalu dideklarasikan di `dependencies` pada `plugin.json`, sehingga `claude plugin install daekan-meta-ads` memasang semuanya sekaligus. Yang dipasang hanya **subset skill yang dipakai pipeline**, untuk menjaga beban konteks kecil (~1.200 token always-on untuk seluruh dependensi).
+
+**Guardrail §5 berlaku juga atas skill dependensi dan referensi.** Tidak ada skill atau referensi pihak ketiga yang boleh dipakai untuk mengubah, mempublikasikan, atau mengaktifkan entitas Meta Ads, men-generate gambar di luar Daekan, atau mempublikasikan landing page. Semua perubahan Meta Ads hanya lewat `4-launch` (PAUSED). Plugin claude-ads utuh sengaja **tidak** dipasang karena membawa skill `ads-launch`.
 
 Plugin ini **tidak** menyertakan `.mcp.json`. Kedua MCP server sudah dikonfigurasi di environment user, dan konfigurasi duplikat akan bentrok.
 
 ### 1.2 Aturan fallback
 
 - Nama tool MCP bisa berbeda antar environment. Subagent mencari tool berdasarkan **fungsinya** (mis. "baca entitas & insight iklan", "laporan penjualan per UTM"), bukan nama yang di-hardcode.
-- Jika MCP atau skill opsional tidak tersedia, subagent WAJIB menulis `TIDAK TERSEDIA: <nama>` di section terkait pada file output, lalu melanjutkan dengan data yang ada. **DILARANG mengarang angka, order, atau data kompetitor.**
+- Jika MCP, skill dependensi (mis. dinonaktifkan user, atau butuh API key yang belum diset), atau file referensi tidak tersedia, subagent WAJIB menulis `TIDAK TERSEDIA: <nama>` di section terkait pada file output, lalu melanjutkan dengan data yang ada. **DILARANG mengarang angka, order, atau data kompetitor.**
 - Jika **Meta Ads MCP** atau **Daekan Katalisa MCP** tidak tersedia, fase yang bergantung padanya WAJIB berhenti dan melapor ke user.
 
 ---
@@ -91,7 +95,7 @@ source_file: research/latest.md           # file input fase sebelumnya (null unt
 4. `## Penjualan per UTM (Daekan Katalisa)`: tabel order, revenue, dan konversi per triple UTM.
 5. `## Rekonsiliasi Meta ↔ Daekan`: join via triple UTM (§3.5). Wajib memuat **Tabel Performa Meta Ads vs Omzet UTM Daekan** dengan kolom `utm_campaign | utm_term | utm_content | spend | CTR | CPA Meta | ROAS Meta | order Daekan | omzet Daekan | CPA aktual | ROAS aktual | selisih ROAS` dan baris TOTAL, lalu daftar mismatch (UTM tak dikenal, entitas tanpa order, order tanpa UTM, nama yang melanggar regex).
 6. `## Riset Kompetitor & Tren (30 hari)`: hasil `last30days` / Ad Library. Wajib memuat **Tabel Rangkuman Hook Kompetitor** dengan kolom `kompetitor | hook (verbatim, ≤ 15 kata) | angle | offer | format | lama tayang | sumber`.
-7. `## Audit Checklist`: hasil checklist `claude-ads`.
+7. `## Audit Checklist`: hasil evaluasi katalog `references/claude-ads/meta-audit.md` (✅ / ⚠️ / ❌ / `unknown` + bukti).
 8. `## Peluang & Hipotesis untuk Batch Berikutnya`.
 
 **`briefs/batch-latest.md`** (Fase 2)
