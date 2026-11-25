@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Quality gate untuk file kontrak di briefs/ (lihat ARCHITECTURE.md §2, §3, §4, §6).
+// Quality gate untuk file kontrak di briefs/ — batch-latest.md (strategy),
+// lp-sync.md (landing-page), assets-ready.md (production). Lihat ARCHITECTURE.md §2–§6.
 //
 // Dua mode:
 //   1. Hook PostToolUse (stdin = JSON event Claude Code). Hanya memeriksa
@@ -10,7 +11,7 @@
 // Tanpa dependensi eksternal (Node >= 18).
 
 import { readFileSync, existsSync } from "node:fs";
-import { resolve, dirname, isAbsolute, join, sep } from "node:path";
+import { resolve, dirname, basename, isAbsolute, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -33,6 +34,16 @@ const KEY_KIND = {
 };
 const REQUIRED_FM = ["batch_id", "phase", "status", "generated_at", "generated_by", "source_file"];
 const MAX_DAEKAN_IMAGES = 4;
+const PHASES = ["research", "strategy", "landing-page", "production", "launch"];
+// Nama file kontrak di briefs/ -> phase yang wajib (ARCHITECTURE.md §2.1)
+const FILE_PHASE = {
+  "batch-latest.md": "strategy",
+  "lp-sync.md": "landing-page",
+  "assets-ready.md": "production",
+};
+const PIXEL_ACTIVE = /^(active|aktif)$/i;
+// Prefix baris "prompt" untuk aset LP yang dipakai ulang di Fase 3 (tidak dihitung batas generate)
+const LP_REUSE_PREFIX = /^lp-/i;
 
 function isValidDate(yyyymmdd) {
   if (!/^\d{8}$/.test(yyyymmdd)) return false;
@@ -95,8 +106,9 @@ function analyse(text) {
   const { fm, bodyStart } = parseFrontMatter(text);
   const names = []; // {kind, value, line}
   const tables = []; // {headers, rows:[{cells,line}], section}
-  const policyLines = []; // {text, line}
+  const policyLines = []; // {text, line, section}
   const sections = {}; // heading -> [lines]
+  const kvs = {}; // key -> {value, line} (deklarasi "- key: `value`" pertama)
   let section = "";
   let inFence = false;
 
@@ -136,12 +148,19 @@ function analyse(text) {
       if (v && !PLACEHOLDER.test(v) && !/[{<]/.test(v)) names.push({ kind: KEY_KIND[kv[1].toLowerCase()], value: v, line: ln });
     }
 
+    // Deklarasi key-value generik (landing_page_url, meta_pixel_status, ...)
+    const gkv = raw.match(/^\s*(?:[-*+]\s+)?\**`?([a-z][a-z0-9_]*)`?\**\s*:\s*\**\s*(?:`([^`]*)`|(\S[^|]*?))\s*$/i);
+    if (gkv) {
+      const key = gkv[1].toLowerCase();
+      if (!(key in kvs)) kvs[key] = { value: (gkv[2] ?? gkv[3] ?? "").trim(), line: ln };
+    }
+
     // Kandidat scan policy (bukan section QA, bukan negative prompt, bukan qa-ignore)
     const isQA = /^hasil\s+qa/i.test(section);
     const isNegative = /^\s*(?:[-*+]\s+)?\**(negative(\s+prompt)?|negatif)\**\s*:/i.test(raw);
-    if (!isQA && !isNegative && !/qa-ignore/i.test(raw)) policyLines.push({ text: raw, line: ln });
+    if (!isQA && !isNegative && !/qa-ignore/i.test(raw)) policyLines.push({ text: raw, line: ln, section });
   }
-  return { fm, names, tables, policyLines, sections };
+  return { fm, names, tables, policyLines, sections, kvs };
 }
 
 function loadPolicy() {
@@ -159,7 +178,8 @@ export function checkFile(file) {
   const errors = [];
   const warnings = [];
   const text = readFileSync(file, "utf8");
-  const { fm, names, tables, policyLines, sections } = analyse(text);
+  const { fm, names, tables, policyLines, sections, kvs } = analyse(text);
+  const fileName = basename(file).toLowerCase();
 
   // 1. Front-matter kontrak
   if (!fm) {
@@ -170,9 +190,25 @@ export function checkFile(file) {
     if (fm.batch_id && !/^b\d{6}(-\d+)?$/.test(fm.batch_id)) errors.push(`batch_id '${fm.batch_id}' harus bYYMMDD (opsional -n).`);
     if (fm.status && !["draft", "approved", "rejected"].includes(fm.status.toLowerCase()))
       errors.push(`status '${fm.status}' harus draft | approved | rejected.`);
+    if (fm.phase && !PHASES.includes(fm.phase.toLowerCase()))
+      errors.push(`phase '${fm.phase}' harus salah satu dari ${PHASES.join(" | ")} (§2.2).`);
+    const expectedPhase = FILE_PHASE[fileName];
+    if (expectedPhase && fm.phase && fm.phase.toLowerCase() !== expectedPhase)
+      errors.push(`${fileName} wajib ber-phase '${expectedPhase}', ditemukan '${fm.phase}' (§2.1).`);
   }
   const fmBatch = fm?.batch_id;
   const approved = (fm?.status || "").toLowerCase() === "approved";
+  const phase = (fm?.phase || "").toLowerCase();
+
+  // 1b. batch_id lintas file: lp-sync & assets-ready wajib sama dengan batch-latest di folder yang sama
+  if (fmBatch && (fileName === "lp-sync.md" || fileName === "assets-ready.md")) {
+    const sibling = join(dirname(file), "batch-latest.md");
+    if (existsSync(sibling)) {
+      const sib = parseFrontMatter(readFileSync(sibling, "utf8")).fm;
+      if (sib?.batch_id && sib.batch_id !== fmBatch)
+        errors.push(`batch_id '${fmBatch}' berbeda dengan briefs/batch-latest.md ('${sib.batch_id}') (§2.3).`);
+    }
+  }
 
   // 2. Format UTM
   const seen = new Set();
@@ -196,10 +232,15 @@ export function checkFile(file) {
   // 4. Kata rawan Meta Policy
   const policy = loadPolicy();
   if (policy.loadError) warnings.push(policy.loadError);
-  for (const { text: t, line } of policyLines) {
+  for (const { text: t, line, section } of policyLines) {
+    // Snapshot LP lama di lp-sync draft boleh mengutip copy bermasalah (jadi temuan audit);
+    // saat approved, LP final wajib bersih -> tetap error.
+    const auditSnapshot = phase === "landing-page" && !approved && /^audit\s+lp\s+saat\s+ini/i.test(section || "");
     for (const { re, reason } of policy.high) {
       const m = t.match(re);
-      if (m) errors.push(`baris ${line}: frasa rawan policy "${m[0]}" — ${reason}.`);
+      if (!m) continue;
+      if (auditSnapshot) warnings.push(`baris ${line}: LP saat ini memuat frasa rawan "${m[0]}" — ${reason}. Wajib direvisi sebelum approved.`);
+      else errors.push(`baris ${line}: frasa rawan policy "${m[0]}" — ${reason}.`);
     }
     for (const { re, reason } of policy.medium) {
       const m = t.match(re);
@@ -208,7 +249,6 @@ export function checkFile(file) {
   }
 
   // 5. Aturan dual-engine & gate status
-  const phase = (fm?.phase || "").toLowerCase();
   if (phase === "strategy") {
     const promptSec = Object.keys(sections).find((s) => /^prompt\s+visual\s+daekan/i.test(s));
     if (!promptSec) {
@@ -243,13 +283,42 @@ export function checkFile(file) {
       errors.push("Tabel '## Aset Daekan' (kolom prompt, daekan_asset_url, rasio, dipakai_oleh) tidak ditemukan (§2.4).");
     } else {
       const iUrl = assets.headers.indexOf("daekan_asset_url");
-      if (assets.rows.length > MAX_DAEKAN_IMAGES) errors.push(`Aset Daekan = ${assets.rows.length} gambar; maksimal ${MAX_DAEKAN_IMAGES} per batch (§4.1).`);
+      const iPrompt = assets.headers.indexOf("prompt");
+      // Aset LP yang dipakai ulang (prompt berawalan "lp-") tidak dihitung batas generate Fase 3 (§4.1)
+      const generated = assets.rows.filter((r) => !LP_REUSE_PREFIX.test(r.cells[iPrompt] || "")).length;
+      if (generated > MAX_DAEKAN_IMAGES) errors.push(`Aset Daekan yang di-generate = ${generated} gambar; maksimal ${MAX_DAEKAN_IMAGES} per batch (§4.1).`);
       if (approved) for (const r of assets.rows) {
         if (!/^https?:\/\//.test(r.cells[iUrl] || "")) errors.push(`baris ${r.line}: aset Daekan tanpa daekan_asset_url (§4.1).`);
       }
     }
   }
-  if (approved && (phase === "strategy" || phase === "production")) {
+  if (phase === "landing-page") {
+    // source_file
+    if (fm?.source_file && fm.source_file !== "briefs/batch-latest.md")
+      errors.push(`source_file lp-sync wajib 'briefs/batch-latest.md', ditemukan '${fm.source_file}' (§2.2).`);
+    // landing_page_url bersih
+    const lp = kvs.landing_page_url;
+    if (!lp || !lp.value || PLACEHOLDER.test(lp.value)) {
+      errors.push("Deklarasi '- landing_page_url: `https://...`' tidak ditemukan di lp-sync (§2.4, §2.5).");
+    } else {
+      if (!/^https?:\/\/\S+$/i.test(lp.value)) errors.push(`baris ${lp.line}: landing_page_url '${lp.value}' bukan URL http(s) yang valid.`);
+      if (/utm_/i.test(lp.value)) errors.push(`baris ${lp.line}: landing_page_url mengandung 'utm_' (${lp.value}). Wajib URL bersih; UTM lewat url_tags Meta (§3.2, §5).`);
+    }
+    // Aset hero/mockup LP
+    const assets = tables.find((t) => t.headers.includes("prompt") && t.headers.includes("daekan_asset_url"));
+    if (assets) {
+      const iUrl = assets.headers.indexOf("daekan_asset_url");
+      if (assets.rows.length > MAX_DAEKAN_IMAGES) errors.push(`Aset Daekan LP = ${assets.rows.length} gambar; maksimal ${MAX_DAEKAN_IMAGES} per fase (§4.1).`);
+      if (approved) for (const r of assets.rows) {
+        if (!/^https?:\/\//.test(r.cells[iUrl] || "")) errors.push(`baris ${r.line}: aset Daekan LP tanpa daekan_asset_url (§4.1).`);
+      }
+    }
+    // Pixel wajib aktif saat approved
+    const px = kvs.meta_pixel_status;
+    if (approved && !(px && PIXEL_ACTIVE.test(px.value)))
+      errors.push(`status: approved tetapi meta_pixel_status bukan 'active' (${px ? `'${px.value}'` : "tidak ditemukan"}). Meta Pixel wajib aktif sebelum launch (§5).`);
+  }
+  if (approved && (phase === "strategy" || phase === "production" || phase === "landing-page")) {
     const qaSec = Object.keys(sections).find((s) => /^hasil\s+qa/i.test(s));
     const qaText = qaSec ? sections[qaSec].join("\n") : "";
     if (!/verdict\s+batch\s*:?\**\s*:?\s*\**\s*PASS\b(?![ \t]*\|)/i.test(qaText))

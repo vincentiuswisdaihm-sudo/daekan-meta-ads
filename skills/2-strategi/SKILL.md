@@ -110,4 +110,4 @@ Tanyakan: **"Setujui batch `<batch_id>` untuk produksi?"**
 
 ## Selesai
 
-Laporkan path file, jumlah konsep static/video, dan status. Langkah berikutnya: **`/daekan-meta-ads:3-produksi`**.
+Laporkan path file, jumlah konsep static/video, dan status. Langkah berikutnya: **`/daekan-meta-ads:2b-landing-page`** (selaraskan landing page, wajib sebelum launch), lalu **`/daekan-meta-ads:3-produksi`**.

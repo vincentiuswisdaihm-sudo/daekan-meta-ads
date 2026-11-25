@@ -1,5 +1,5 @@
 {
-  "description": "Quality gate daekan-meta-ads: setiap kali file di briefs/ disimpan, periksa front-matter kontrak, format UTM, kata rawan Meta Ads Policy, dan aturan dual-engine (ARCHITECTURE.md §6).",
+  "description": "Quality gate daekan-meta-ads: setiap kali file di briefs/ disimpan (batch-latest.md, lp-sync.md, assets-ready.md), periksa front-matter & phase kontrak, format UTM, URL landing page bebas UTM, kata rawan Meta Ads Policy, Meta Pixel aktif, dan aturan dual-engine (ARCHITECTURE.md §6).",
   "hooks": {
     "PostToolUse": [
       {
