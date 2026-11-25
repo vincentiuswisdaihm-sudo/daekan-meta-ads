@@ -66,6 +66,10 @@ Untuk tiap ad fatigue, tulis angka pendukungnya. Jangan hanya menulis label.
 ### 7. Tulis `research/latest.md`
 - Jika file lama ada, salin dulu ke `research/archive/<batch_id-lama>.md`.
 - Tulis file baru dengan front-matter (`phase: research`, `status: draft`, `generated_by: ads-researcher`, `source_file: null`) dan **8 section wajib** sesuai `ARCHITECTURE.md` §2.4, dengan urutan dan judul yang sama persis.
+- Tiga tabel wajib dengan kolom persis sesuai §2.4:
+  - **Performa Meta Ads vs Omzet UTM Daekan**, di Rekonsiliasi, dengan baris TOTAL.
+  - **Kandidat Ad Fatigue**, di Sinyal Creative Fatigue.
+  - **Rangkuman Hook Kompetitor**, di Riset Kompetitor.
 - Section `## Peluang & Hipotesis untuk Batch Berikutnya` berisi 3–7 hipotesis yang bisa diuji. Format: "Jika kita <ubah X> untuk <audiens Y>, maka <metrik Z> membaik karena <bukti dari data di atas>."
 
 ## Output ke pemanggil

@@ -1,0 +1,17 @@
+{
+  "description": "Quality gate daekan-meta-ads: setiap kali file di briefs/ disimpan, periksa front-matter kontrak, format UTM, kata rawan Meta Ads Policy, dan aturan dual-engine (ARCHITECTURE.md §6).",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brief-gate.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -55,7 +55,19 @@ Sebelum mulai, **baca `ARCHITECTURE.md`** (§2 kontrak file, §3 UTM, §4 dual-e
 8. **Tulis `briefs/batch-latest.md`:**
    - Jika file lama ada, salin dulu ke `briefs/archive/<batch_id-lama>-batch.md`.
    - Front-matter: `phase: strategy`, `status: draft`, `generated_by: creative-strategist`, `source_file: research/latest.md`.
-   - Isi **6 section wajib** sesuai `ARCHITECTURE.md` §2.4. Section `## Hasil QA` dibiarkan berisi `PENDING`.
+   - Isi **6 section wajib** sesuai `ARCHITECTURE.md` §2.4, termasuk `### Produk & Landing Page` dari Brief Produk yang diberikan pemanggil. Section `## Hasil QA` dibiarkan berisi `PENDING`.
+   - Pakai **format machine-readable** `ARCHITECTURE.md` §2.5:
+     - Baris `- utm_campaign: \`...\`` dan `- utm_term: \`...\`` di `## Struktur Kampanye`.
+     - Baris `- ad_name: \`...\`` sebagai baris pertama tiap `### Konsep n`.
+     - Satu heading `### Prompt n` per gambar di `## Prompt Visual Daekan`.
+   - Hook quality gate (`hooks/scripts/brief-gate.mjs`) berjalan otomatis setiap file disimpan. Perbaiki **semua ERROR** yang dilaporkan sebelum mengembalikan hasil.
+
+## Variasi wajib per batch
+
+- **Static ad:** minimal 2 konsep (`img11` / `img45` / `img916` / `car`).
+- **Video ad:** minimal 2 konsep. Tiap konsep dibuat dalam **dua** format, `vid916` dan `vid45`, masing-masing dengan `ad_name` sendiri.
+- Total prompt gambar Daekan untuk seluruh batch ≤ 4. Gambar dipakai bersama oleh static ad dan scene video.
+- Data offer (harga, bonus, garansi, testimoni) diambil **verbatim** dari Brief Produk. DILARANG mengarang atau mengubahnya.
 
 ## Output ke pemanggil
 
