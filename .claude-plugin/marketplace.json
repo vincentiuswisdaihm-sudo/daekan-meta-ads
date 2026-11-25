@@ -12,13 +12,14 @@
       "name": "daekan-meta-ads",
       "source": "./",
       "description": "Pipeline Meta Ads end-to-end untuk produk digital (riset, strategi, landing page, produksi, launch) dengan Daekan Katalisa MCP, Meta Ads MCP, dan Remotion.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "author": {
         "name": "vincentiuswisdaihm-sudo"
       },
       "homepage": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads",
       "repository": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads",
-      "category": "marketing"
+      "category": "marketing",
+      "license": "MIT"
     }
   ]
 }

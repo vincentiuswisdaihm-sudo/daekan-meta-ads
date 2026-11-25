@@ -76,9 +76,13 @@ Skill 2B, 3, dan 4 hanya berjalan jika Anda memanggilnya langsung.
 ## Struktur
 
 ```
-.claude-plugin/   plugin.json, marketplace.json
+.claude-plugin/   plugin.json, marketplace.json, icon.png (+ sumber icon.svg)
 agents/           ads-researcher, creative-strategist, lp-strategist, creative-qa
 skills/           1-riset, 2-strategi, 2b-landing-page, 3-produksi, 4-launch
 hooks/            hooks.json, scripts/brief-gate.mjs, policy-terms.json
 ARCHITECTURE.md   kontrak file, UTM, dual-engine, keamanan
 ```
+
+## Lisensi
+
+[MIT](LICENSE) © 2026 vincentiuswisdaihm-sudo

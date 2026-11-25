@@ -1,6 +1,6 @@
 {
   "name": "daekan-meta-ads",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Pipeline Meta Ads end-to-end untuk produk digital: riset (Meta Ads MCP + Daekan Katalisa MCP), strategi kreatif, landing page strategis (message-match, offer, Meta Pixel), produksi dual-engine (Daekan AI Image Generator + Remotion), dan launch Meta Ads yang selalu berstatus PAUSED dengan UTM yang sinkron.",
   "author": {
     "name": "vincentiuswisdaihm-sudo",
@@ -8,6 +8,7 @@
   },
   "homepage": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads",
   "repository": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads",
+  "license": "MIT",
   "keywords": [
     "meta-ads",
     "facebook-ads",
