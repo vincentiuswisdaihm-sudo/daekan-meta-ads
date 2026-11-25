@@ -34,3 +34,4 @@ Thumbs.db
 
 # ── File sesi lokal HarnessKit ───────────────────────
 .harnesskit/session-start-time.txt
+.harnesskit/session-logs/
