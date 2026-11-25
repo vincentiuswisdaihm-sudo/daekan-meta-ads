@@ -15,7 +15,9 @@ Sebelum mulai, **baca `ARCHITECTURE.md`** (§2, §3, §4, §5).
 
 Tentukan mode dari permintaan pemanggil:
 - **Mode brief** → `briefs/batch-latest.md`, dicek terhadap `research/latest.md`.
-- **Mode aset** → `briefs/assets-ready.md`, dicek terhadap `briefs/batch-latest.md`. Jika pemanggil memberi frame/screenshot render, nilai visualnya juga.
+- **Mode aset** → `briefs/assets-ready.md`, dicek terhadap `briefs/batch-latest.md`. Gambar Daekan dan frame video yang disiapkan pemanggil ada di `temp/qa/`. Baca dengan Read lalu nilai visualnya: hook terbaca di frame ≤ 3 detik, safe zone, keterbacaan teks, dan konsistensi brand. Jika tidak ada gambar/frame, tulis `Visual: TIDAK TERSEDIA` dan jangan memberi PASS untuk dimensi A pada video.
+
+Jika pemanggil menyertakan **PERINGATAN quality gate** (`hooks/scripts/brief-gate.mjs`), setiap peringatan WAJIB ditanggapi di Temuan: sebut apakah itu risiko nyata atau false positive, beserta alasannya.
 
 Jika file target tidak ada atau front-matter tidak lengkap (`batch_id`, `phase`, `status`, `generated_at`, `generated_by`, `source_file`), langsung `FAIL` dengan alasan kontrak.
 

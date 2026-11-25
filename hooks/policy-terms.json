@@ -1,0 +1,87 @@
+{
+  "_comment": "Daftar pola kata/frasa rawan Meta Ads Policy untuk quality gate briefs/. 'high' = error (wajib diperbaiki), 'medium' = peringatan (wajib dicek creative-qa). Pola = regex JavaScript, case-insensitive. Baris yang mengandung 'qa-ignore' dilewati.",
+  "high": [
+    {
+      "pattern": "\\b(dijamin|pasti|auto)\\s+(kaya|untung|cuan|profit|balik\\s+modal|berhasil|sukses|laris|closing|gajian)\\b",
+      "reason": "Janji hasil/penghasilan yang dijamin (Meta: misleading claims, get-rich-quick)"
+    },
+    {
+      "pattern": "\\b(cepat\\s+kaya|kaya\\s+(mendadak|instan|cepat|dalam\\s+\\d+))\\b",
+      "reason": "Skema 'kaya cepat' (Meta: unrealistic outcomes)"
+    },
+    {
+      "pattern": "\\b(get\\s+rich\\s+quick|guaranteed\\s+(income|results?|profits?|earnings?)|make\\s+\\$?\\d[\\d.,]*\\s*(k|m)?\\s*(a|per)\\s*(day|week|month))\\b",
+      "reason": "Klaim penghasilan / hasil terjamin (EN)"
+    },
+    {
+      "pattern": "\\b(penghasilan|income|profit|omzet|omset|cuan|gaji|untung)\\b[^.\\n]{0,25}?\\d[\\d.,]*\\s*(juta|jt|ribu|rb|k|m)\\b\\s*(\\/|per)\\s*(hari|minggu|bulan|day|week|month)",
+      "reason": "Klaim nominal penghasilan per periode"
+    },
+    {
+      "pattern": "\\b100\\s*%\\s*(berhasil|ampuh|pasti|works?|sukses|manjur)\\b",
+      "reason": "Klaim keberhasilan absolut tanpa bukti"
+    },
+    {
+      "pattern": "\\b(apakah|apa)\\s+(anda|kamu|kau|lo|lu)\\b[^?\\n]{0,40}\\b(gemuk|gendut|obesitas|jerawat(an)?|botak|berutang|terlilit\\s+utang|hutang|utang|miskin|bangkrut|jomblo|depresi|cemas|stres|diabetes|sakit|cerai|janda|duda|hamil|mandul|lgbt|gay|lesbian)\\b",
+      "reason": "Atribut personal (Meta: personal attributes) — jangan menyiratkan kondisi pribadi audiens"
+    },
+    {
+      "pattern": "\\b(anda|kamu)\\s+yang\\s+(sedang\\s+)?(gemuk|gendut|obesitas|jerawat(an)?|botak|berutang|terlilit\\s+utang|miskin|bangkrut|jomblo|depresi|cemas|diabetes|cerai|janda|duda|hamil|mandul)\\b",
+      "reason": "Atribut personal (Meta: personal attributes)"
+    },
+    {
+      "pattern": "\\bare\\s+you\\s+(fat|overweight|broke|in\\s+debt|depressed|single|divorced|bald|diabetic|anxious)\\b",
+      "reason": "Atribut personal (EN)"
+    },
+    {
+      "pattern": "\\b(turun|hilang|susut)\\s+\\d+\\s*(kg|kilo)\\b",
+      "reason": "Klaim penurunan berat badan spesifik"
+    },
+    {
+      "pattern": "\\b(screenshot|ss|bukti)\\s+(transfer|mutasi|saldo|rekening|gajian)\\b",
+      "reason": "Bukti penghasilan/mutasi rekening sebagai materi iklan"
+    },
+    {
+      "pattern": "\\b(sembuh\\s+total|menyembuhkan\\s+\\w+|obat\\s+ampuh)\\b",
+      "reason": "Klaim kesehatan/medis"
+    }
+  ],
+  "medium": [
+    {
+      "pattern": "\\b(passive\\s+income|penghasilan\\s+pasif)\\b",
+      "reason": "Klaim penghasilan pasif — butuh konteks realistis & disclaimer"
+    },
+    {
+      "pattern": "\\b(bebas\\s+finansial|financial\\s+freedom|pensiun\\s+dini)\\b",
+      "reason": "Janji kebebasan finansial — rawan dianggap unrealistic outcome"
+    },
+    {
+      "pattern": "\\b(tanpa\\s+modal|modal\\s+nol|zero\\s+modal)\\b",
+      "reason": "Klaim bisnis tanpa modal — sering ditolak sebagai misleading"
+    },
+    {
+      "pattern": "\\b(before\\s*[-/&]?\\s*after|sebelum\\s+(dan|&|vs\\.?)\\s+sesudah)\\b",
+      "reason": "Format before-after — pastikan tidak menyiratkan hasil tidak realistis"
+    },
+    {
+      "pattern": "\\b(satu-satunya|nomor\\s+1|no\\.?\\s*1|#1|terbaik\\s+di\\s+indonesia|paling\\s+ampuh)\\b",
+      "reason": "Superlatif yang perlu bukti"
+    },
+    {
+      "pattern": "\\b(rahasia|trik)\\s+(yang\\s+)?(dokter|bank|pemerintah|orang\\s+kaya)\\b[^.\\n]{0,30}\\b(sembunyikan|tidak\\s+mau|gak\\s+mau)\\b",
+      "reason": "Clickbait / sensasional"
+    },
+    {
+      "pattern": "\\b(kripto|crypto|forex|trading\\s+signal|sinyal\\s+trading|robot\\s+trading|binary\\s+option)\\b",
+      "reason": "Kategori finansial terbatas — cek kebijakan & izin"
+    },
+    {
+      "pattern": "\\b(pinjaman|kredit|kpr|cicilan\\s+0|lowongan\\s+kerja|loker)\\b",
+      "reason": "Kemungkinan Special Ad Category (kredit/pekerjaan/perumahan)"
+    },
+    {
+      "pattern": "\\b(hanya\\s+hari\\s+ini|detik\\s+terakhir|sisa\\s+\\d+\\s+(slot|kuota))\\b",
+      "reason": "Urgensi — pastikan benar & bisa dibuktikan (bukan countdown palsu)"
+    }
+  ]
+}

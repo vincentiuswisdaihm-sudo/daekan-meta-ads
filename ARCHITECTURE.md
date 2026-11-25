@@ -74,34 +74,50 @@ source_file: research/latest.md           # file input fase sebelumnya (null unt
 **`research/latest.md`** (Fase 1)
 1. `## Ringkasan Eksekutif`: 3–5 temuan utama + rekomendasi.
 2. `## Performa Meta Ads`: tabel per campaign/ad set/ad: spend, impresi, CTR, CPM, CPC, CPA, ROAS (versi Meta), frequency.
-3. `## Sinyal Creative Fatigue`: daftar ad + alasan (lihat kriteria di `agents/ads-researcher.md`).
+3. `## Sinyal Creative Fatigue`: **Tabel Kandidat Ad Fatigue** dengan kolom `ad (utm_content) | frequency | CTR 7h vs 7h sebelumnya | CPM Δ | CPA Δ / ROAS Δ | kriteria terpenuhi | rekomendasi`. Kriteria ada di `agents/ads-researcher.md`.
 4. `## Penjualan per UTM (Daekan Katalisa)`: tabel order, revenue, dan konversi per triple UTM.
-5. `## Rekonsiliasi Meta ↔ Daekan`: join via triple UTM (§3.5), ROAS aktual vs ROAS Meta, daftar mismatch (UTM tak dikenal, entitas tanpa order, nama yang melanggar regex).
-6. `## Riset Kompetitor & Tren (30 hari)`: hasil `last30days` / Ad Library.
+5. `## Rekonsiliasi Meta ↔ Daekan`: join via triple UTM (§3.5). Wajib memuat **Tabel Performa Meta Ads vs Omzet UTM Daekan** dengan kolom `utm_campaign | utm_term | utm_content | spend | CTR | CPA Meta | ROAS Meta | order Daekan | omzet Daekan | CPA aktual | ROAS aktual | selisih ROAS` dan baris TOTAL, lalu daftar mismatch (UTM tak dikenal, entitas tanpa order, order tanpa UTM, nama yang melanggar regex).
+6. `## Riset Kompetitor & Tren (30 hari)`: hasil `last30days` / Ad Library. Wajib memuat **Tabel Rangkuman Hook Kompetitor** dengan kolom `kompetitor | hook (verbatim, ≤ 15 kata) | angle | offer | format | lama tayang | sumber`.
 7. `## Audit Checklist`: hasil checklist `claude-ads`.
 8. `## Peluang & Hipotesis untuk Batch Berikutnya`.
 
 **`briefs/batch-latest.md`** (Fase 2)
-1. `## Ringkasan Batch`: tujuan, produk, offer utama, anggaran indikatif.
+1. `## Ringkasan Batch`: tujuan, produk, offer utama, anggaran indikatif. Wajib memuat sub-section `### Produk & Landing Page` yang diekstrak dari Daekan Katalisa MCP: `product_id`, `product_name`, `landing_page_url` (tanpa UTM), harga normal/promo, value stack, bonus, garansi, testimoni (verbatim), dan `meta_pixel_id`.
 2. `## Struktur Kampanye`: nama campaign (`utm_campaign`) dan ad set (`utm_term`) yang diusulkan.
-3. `## Konsep Kreatif`: satu sub-section per konsep, berisi:
-   `ad_name` (= `utm_content`), angle, offer, hook 3 detik, primary text, headline, description, CTA, format, landing page URL (tanpa UTM; UTM ditambahkan saat launch).
-4. `## Prompt Visual Daekan`: maks 4 prompt gambar per batch (§4.1), masing-masing dengan rasio & `ad_name` tujuan.
+3. `## Konsep Kreatif`: satu sub-section `### Konsep n` per ad, berisi:
+   `ad_name` (= `utm_content`), tipe (static/video), angle, offer, hook 3 detik, primary text, headline, description, CTA, format. Landing page cukup ditulis sekali di `### Produk & Landing Page`; UTM ditambahkan saat launch.
+4. `## Prompt Visual Daekan`: satu heading `### Prompt n` per gambar, **maks 4 per batch** (§4.1), masing-masing dengan rasio & `ad_name`/scene tujuan.
 5. `## Storyboard Remotion`: untuk konsep video, berisi scene, durasi, teks overlay, dan aset Daekan yang dipakai.
 6. `## Hasil QA`: diisi dari verdict `creative-qa`.
 
 **`briefs/assets-ready.md`** (Fase 3)
-1. `## Manifest Aset`: tabel `ad_name | format | engine (daekan/remotion) | daekan_asset_url | render_path | durasi | rasio | status`.
-2. `## Estimasi & Konsumsi Token Daekan`: estimasi yang dikonfirmasi user vs aktual.
-3. `## Catatan Render Remotion`: composition id, resolusi, fps, durasi.
-4. `## Hasil QA`: diisi dari verdict `creative-qa`.
+1. `## Aset Daekan`: tabel `prompt | daekan_asset_url | rasio | dipakai_oleh`, satu baris per gambar hasil AI Image Generator Daekan (maks 4). URL = URL Asset Library Daekan.
+2. `## Manifest Aset`: tabel `ad_name | format | engine | daekan_asset_url | render_path | durasi | rasio | status`, satu baris per ad. `engine` ∈ `daekan` (static) | `remotion` (video). Untuk video, `daekan_asset_url` berisi URL Daekan yang dipakai di dalam video. `status` ∈ `pending` | `ready` | `failed`.
+3. `## Estimasi & Konsumsi Token Daekan`: estimasi yang dikonfirmasi user vs aktual.
+4. `## Catatan Render Remotion`: composition id, resolusi, fps, durasi, path props.
+5. `## Hasil QA`: diisi dari verdict `creative-qa`.
 
 **`reports/launch-log.md`** (Fase 4, append-only)
-Per batch:
+Front-matter dibuat saat file pertama kali ditulis. Satu-satunya perubahan yang diizinkan setelahnya adalah memperbarui `batch_id` dan `generated_at` ke batch terbaru. Isi di bawah front-matter hanya boleh ditambah.
+Per batch, satu section `## <batch_id> — <tanggal>` berisi:
 1. Tabel `level | nama (= nilai UTM) | meta_id | status | created_at`. Kolom status WAJIB `PAUSED`.
 2. URL tujuan final lengkap dengan `url_tags` (§3.2).
 3. Verifikasi pasca-create: hasil baca ulang status dari Meta Ads MCP.
 4. Catatan: siapa yang boleh mengaktifkan, dan kapan.
+
+### 2.5 Format machine-readable (dibaca quality gate §6)
+
+Agar bisa diperiksa otomatis, nilai UTM di file `briefs/` WAJIB ditulis dalam salah satu bentuk berikut:
+
+- **Deklarasi key-value** di awal baris, nilainya di dalam backtick:
+  ```markdown
+  - utm_campaign: `ebook-ads101_sales_tof_20261125`
+  - utm_term: `lal1-buyers_id_advplus`
+  - ad_name: `b261125_pain-time_h2_vid916_v1`
+  ```
+- **Kolom tabel** dengan header persis `ad_name`, `utm_content`, `utm_campaign`, atau `utm_term`.
+
+Pola contoh yang memakai `{...}` atau `<...>` tidak divalidasi. Nilai `PENDING`, `-`, dan `n/a` dianggap placeholder.
 
 ---
 
@@ -215,3 +231,39 @@ Contoh **tidak valid**: `Ebook Ads101 - Sales` (spasi, huruf besar), `ebook_ads1
 4. Perubahan budget, bid, atau penghapusan entitas yang sudah ada WAJIB dikonfirmasi user terlebih dahulu.
 5. Subagent `ads-researcher` dan `creative-qa` bersifat **read-only** terhadap Meta Ads MCP dan Daekan Katalisa MCP. Mereka DILARANG memanggil tool create/update/delete/activate/generate.
 6. Kredensial (token, API key, access token Meta) **DILARANG** ditulis ke repo, ke file kontrak, atau ke log. File CSV klien dan render video tidak di-commit (lihat `.gitignore`).
+7. Sebelum launch, Meta Pixel produk WAJIB terverifikasi aktif di Daekan dan terhubung ke ad account. Rencana launch (nama, budget, targeting, aset, `url_tags`) WAJIB dikonfirmasi user sebelum tool create pertama dipanggil.
+
+---
+
+## 6. Quality Gate Otomatis (`hooks/`)
+
+| Komponen | Fungsi |
+|---|---|
+| `hooks/hooks.json` | Hook `PostToolUse` (matcher `Write\|Edit\|MultiEdit`) yang menjalankan gate setiap kali file `briefs/*.md` disimpan. Folder `briefs/archive/` dikecualikan. |
+| `hooks/scripts/brief-gate.mjs` | Script Node tanpa dependensi. Mode hook (stdin JSON) dan mode CLI: `node hooks/scripts/brief-gate.mjs <file>...` |
+| `hooks/policy-terms.json` | Daftar pola regex kata rawan Meta Ads Policy: `high` → error, `medium` → peringatan. Boleh disesuaikan per niche. |
+
+Yang diperiksa:
+1. Front-matter wajib (§2.2) dan nilai `status`.
+2. Semua nilai UTM (§2.5) terhadap regex, jumlah token, enum, panjang, sufiks `- Copy`, dan kecocokan `batch_id`.
+3. URL berisi UTM hardcode (§3.2).
+4. Kata rawan policy di seluruh file, kecuali section `## Hasil QA`, baris `Negative prompt:`, blok kode, dan baris yang memuat `qa-ignore`.
+5. Batas 4 gambar Daekan (§4.1), engine yang diizinkan, dan kelengkapan URL/path saat `approved` (§4).
+6. `status: approved` hanya sah jika `## Hasil QA` berisi `Verdict batch: PASS` (§2.3).
+
+Perilaku: ERROR → hook keluar dengan kode 2 dan laporannya dikirim ke Claude untuk diperbaiki. PERINGATAN saja → dikirim sebagai konteks tambahan tanpa memblokir.
+
+Penulisan lewat Bash tidak memicu hook. Karena itu setiap skill WAJIB juga menjalankan gate CLI sebelum mengubah status menjadi `approved`.
+
+---
+
+## 7. Peta Skill & Subagent
+
+| Perintah | Fase | Gate masuk | Subagent | Output |
+|---|---|---|---|---|
+| `/daekan-meta-ads:1-riset` | 1 | Kedua MCP tersedia | `ads-researcher` | `research/latest.md` |
+| `/daekan-meta-ads:2-strategi` | 2 | `research/latest.md` ada & approved | `creative-strategist`, `creative-qa` | `briefs/batch-latest.md` |
+| `/daekan-meta-ads:3-produksi` | 3 | `briefs/batch-latest.md` approved + gate lolos | `creative-qa` | `briefs/assets-ready.md` + `renders/` |
+| `/daekan-meta-ads:4-launch` | 4 | `briefs/assets-ready.md` ada & approved + gate lolos + pixel aktif | — | Entitas Meta PAUSED + `reports/launch-log.md` |
+
+Skill 3 dan 4 memakai `disable-model-invocation: true`: hanya berjalan jika user memanggilnya langsung, karena keduanya memakai token Daekan atau membuat entitas di Meta.

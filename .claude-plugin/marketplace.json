@@ -1,0 +1,24 @@
+{
+  "name": "daekan-meta-ads",
+  "owner": {
+    "name": "vincentiuswisdaihm-sudo",
+    "url": "https://github.com/vincentiuswisdaihm-sudo"
+  },
+  "metadata": {
+    "description": "Marketplace satu-plugin untuk daekan-meta-ads: pipeline riset → strategi → produksi (Daekan + Remotion) → launch Meta Ads PAUSED."
+  },
+  "plugins": [
+    {
+      "name": "daekan-meta-ads",
+      "source": "./",
+      "description": "Pipeline Meta Ads end-to-end untuk produk digital dengan Daekan Katalisa MCP, Meta Ads MCP, dan Remotion.",
+      "version": "0.2.0",
+      "author": {
+        "name": "vincentiuswisdaihm-sudo"
+      },
+      "homepage": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads",
+      "repository": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads",
+      "category": "marketing"
+    }
+  ]
+}
