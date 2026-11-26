@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "batch_id": "b261126",
+  "status": "approved",
+  "brand": {
+    "palette": [
+      "#0F172A",
+      "#F97316",
+      "#F8FAFC"
+    ],
+    "fonts": [
+      "Inter"
+    ]
+  },
+  "references": {
+    "landing_page_url": "https://toko.daekan.id/ebook-ads101"
+  },
+  "acceptance_criteria": [
+    "Hook terbaca ≤ 3 detik"
+  ],
+  "do": [
+    "Pakai palet brand"
+  ],
+  "dont": [
+    "Jangan janji penghasilan"
+  ],
+  "policy_notes": [],
+  "asset_id": "b261126_proof-swipe_h1_img45_v1",
+  "ad_name": "b261126_proof-swipe_h1_img45_v1",
+  "concept_id": "konsep-b",
+  "asset_type": "static",
+  "recipient": "designer",
+  "deliverables": [
+    {
+      "ratio": "4:5",
+      "size_px": "1080x1350",
+      "file_type": "png"
+    }
+  ],
+  "copy": {
+    "hook_on_screen": "50 hook teruji",
+    "meta": {
+      "primary_text": "50 hook yang kami uji di ratusan iklan, dirangkum dalam satu swipe file siap pakai.",
+      "headline": "50 Hook Teruji Siap Pakai",
+      "description": "Swipe file untuk Meta Ads",
+      "cta": "SHOP_NOW"
+    }
+  },
+  "diversity": {
+    "angle": "bukti template teruji",
+    "persona": "media buyer pemula",
+    "hook_type": "angka spesifik",
+    "format": "static grid mockup",
+    "visual_world": "flat lay kartu hook di meja putih",
+    "emotional_tone": "percaya diri",
+    "offer_framing": "bonus swipe file"
+  },
+  "layout": {
+    "hierarchy": [
+      "headline",
+      "mockup",
+      "cta"
+    ],
+    "on_image_text": "50 hook teruji",
+    "cta_button": "Ambil sekarang",
+    "safe_zone": "10% tepi"
+  },
+  "delivery": {
+    "file_name": "b261126_proof-swipe_h1_img45_v1.png"
+  }
+}

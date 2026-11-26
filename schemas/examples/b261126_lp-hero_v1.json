@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "batch_id": "b261126",
+  "status": "approved",
+  "brand": {
+    "palette": [
+      "#0F172A",
+      "#F97316",
+      "#F8FAFC"
+    ],
+    "fonts": [
+      "Inter"
+    ]
+  },
+  "references": {
+    "landing_page_url": "https://toko.daekan.id/ebook-ads101"
+  },
+  "acceptance_criteria": [
+    "Hook terbaca ≤ 3 detik"
+  ],
+  "do": [
+    "Pakai palet brand"
+  ],
+  "dont": [
+    "Jangan janji penghasilan"
+  ],
+  "policy_notes": [],
+  "asset_id": "b261126_lp-hero_v1",
+  "concept_id": "lp",
+  "asset_type": "lp-hero",
+  "recipient": "designer",
+  "deliverables": [
+    {
+      "ratio": "4:3",
+      "size_px": "1600x1200",
+      "file_type": "png"
+    }
+  ],
+  "layout": {
+    "hierarchy": [
+      "visual produk"
+    ],
+    "on_image_text": "",
+    "safe_zone": "area kiri kosong untuk headline"
+  },
+  "delivery": {
+    "file_name": "b261126_lp-hero_v1.png"
+  }
+}

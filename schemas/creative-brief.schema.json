@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vincentiuswisdaihm-sudo/daekan-meta-ads/schemas/creative-brief.schema.json",
+  "title": "daekan-meta-ads — Creative Brief Handoff (satu aset per file)",
+  "description": "Spesifikasi produksi satu aset untuk plugin/agent Video Editor atau Designer. Nama file = <asset_id>.json. Aset hasil produksi wajib bernama <asset_id>.<ext> dan dikembalikan lewat /daekan-meta-ads:4-terima-aset. Lihat ARCHITECTURE.md §4.",
+  "type": "object",
+  "required": ["schema_version", "batch_id", "status", "asset_id", "concept_id", "asset_type", "recipient", "deliverables", "brand", "references", "acceptance_criteria", "do", "dont", "delivery"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "batch_id": { "type": "string", "pattern": "^b\\d{6}(-\\d+)?$" },
+    "status": { "enum": ["draft", "approved", "rejected"], "description": "Produksi hanya boleh dimulai bila 'approved'." },
+    "asset_id": { "type": "string", "description": "Untuk iklan = ad_name (= utm_content). Untuk aset LP: {batch_id}_lp-hero|lp-mockup[-label]_v{n}." },
+    "ad_name": { "type": "string", "pattern": "^b\\d{6}(-\\d+)?_[a-z0-9-]+_h\\d+_(img11|img45|img916|vid916|vid45|car)_v\\d+$", "maxLength": 100 },
+    "concept_id": { "type": "string", "description": "Varian format dari satu konsep berbagi concept_id yang sama." },
+    "asset_type": { "enum": ["video", "static", "carousel", "lp-hero", "lp-mockup"] },
+    "recipient": { "enum": ["video-editor", "designer"] },
+    "deliverables": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["ratio", "size_px", "file_type"],
+        "properties": {
+          "ratio": { "enum": ["9:16", "4:5", "1:1", "1.91:1", "4:3", "16:9", "3:2"] },
+          "size_px": { "type": "string", "pattern": "^\\d{3,4}x\\d{3,4}$" },
+          "duration_s": { "type": "number", "exclusiveMinimum": 0, "maximum": 60 },
+          "file_type": { "type": "string" },
+          "max_file_mb": { "type": "number" }
+        }
+      }
+    },
+    "copy": {
+      "type": "object",
+      "required": ["hook_on_screen", "meta"],
+      "properties": {
+        "hook_on_screen": { "type": "string", "minLength": 1, "description": "Teks hook yang terbaca ≤ 3 detik (video) atau teks utama di gambar (static)." },
+        "meta": {
+          "type": "object",
+          "description": "Copy Meta Ads Manager — identik dengan blok 'Copy Meta' di creative-brief.md.",
+          "required": ["primary_text", "headline", "description", "cta"],
+          "properties": {
+            "primary_text": { "type": "string", "minLength": 1, "maxLength": 125 },
+            "primary_text_long": { "type": "string" },
+            "headline": { "type": "string", "minLength": 1, "maxLength": 40 },
+            "description": { "type": "string", "minLength": 1, "maxLength": 30 },
+            "cta": { "type": "string", "description": "Enum CTA Meta, mis. LEARN_MORE, SHOP_NOW, SIGN_UP, DOWNLOAD." },
+            "variations": {
+              "type": "object",
+              "properties": {
+                "primary_text": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 125 } },
+                "headline": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 40 } },
+                "description": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 30 } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "diversity": {
+      "type": "object",
+      "description": "Anti Meta similarity: konsep berbeda wajib beda di angle, hook_type, visual_world dan minimal 4 dari 7 dimensi.",
+      "required": ["angle", "persona", "hook_type", "format", "visual_world", "emotional_tone", "offer_framing"],
+      "properties": {
+        "angle": { "type": "string" }, "persona": { "type": "string" }, "hook_type": { "type": "string" },
+        "format": { "type": "string" }, "visual_world": { "type": "string" },
+        "emotional_tone": { "type": "string" }, "offer_framing": { "type": "string" }
+      }
+    },
+    "storyboard": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["start_s", "end_s", "visual", "on_screen_text"],
+        "properties": {
+          "start_s": { "type": "number", "minimum": 0 }, "end_s": { "type": "number" },
+          "visual": { "type": "string" }, "on_screen_text": { "type": "string" },
+          "vo": { "type": "string" }, "music_sfx": { "type": "string" }, "transition": { "type": "string" }
+        }
+      }
+    },
+    "safe_zone": { "type": "object" },
+    "layout": { "type": "object", "description": "Static/carousel/LP: hierarchy, on_image_text, cta_button, safe_zone; carousel: cards[] (2–10)." },
+    "image_prompt": { "type": "string", "description": "Opsional — prompt untuk generator gambar pilihan Designer." },
+    "brand": {
+      "type": "object", "required": ["palette"],
+      "properties": {
+        "palette": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" } },
+        "fonts": { "type": "array", "items": { "type": "string" } },
+        "logo_usage": { "type": "string" }, "tone": { "type": "string" }
+      }
+    },
+    "references": {
+      "type": "object", "required": ["landing_page_url"],
+      "properties": {
+        "landing_page_url": { "type": "string", "pattern": "^https?://(?!.*utm_)\\S+$" },
+        "assets": { "type": "array", "items": { "type": "string" } },
+        "inspiration": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "do": { "type": "array", "items": { "type": "string" } },
+    "dont": { "type": "array", "items": { "type": "string" } },
+    "policy_notes": { "type": "array", "items": { "type": "string" } },
+    "acceptance_criteria": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "delivery": {
+      "type": "object", "required": ["file_name"],
+      "properties": {
+        "file_name": { "type": "string", "description": "<asset_id>.<ext> (carousel: <asset_id>_card<n>.<ext>)." },
+        "return_via": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "asset_type": { "enum": ["video", "static", "carousel"] } } }, "then": { "required": ["ad_name", "copy", "diversity"] } },
+    { "if": { "properties": { "asset_type": { "const": "video" } } }, "then": { "required": ["storyboard", "safe_zone"], "properties": { "recipient": { "const": "video-editor" } } } },
+    { "if": { "properties": { "asset_type": { "enum": ["static", "carousel", "lp-hero", "lp-mockup"] } } }, "then": { "required": ["layout"], "properties": { "recipient": { "const": "designer" } } } }
+  ]
+}

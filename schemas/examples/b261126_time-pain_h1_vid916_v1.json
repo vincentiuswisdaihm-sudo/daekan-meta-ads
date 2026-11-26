@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "batch_id": "b261126",
+  "status": "approved",
+  "brand": {
+    "palette": [
+      "#0F172A",
+      "#F97316",
+      "#F8FAFC"
+    ],
+    "fonts": [
+      "Inter"
+    ]
+  },
+  "references": {
+    "landing_page_url": "https://toko.daekan.id/ebook-ads101"
+  },
+  "acceptance_criteria": [
+    "Hook terbaca ≤ 3 detik"
+  ],
+  "do": [
+    "Pakai palet brand"
+  ],
+  "dont": [
+    "Jangan janji penghasilan"
+  ],
+  "policy_notes": [],
+  "asset_id": "b261126_time-pain_h1_vid916_v1",
+  "ad_name": "b261126_time-pain_h1_vid916_v1",
+  "concept_id": "konsep-a",
+  "asset_type": "video",
+  "recipient": "video-editor",
+  "deliverables": [
+    {
+      "ratio": "9:16",
+      "size_px": "1080x1920",
+      "duration_s": 15,
+      "file_type": "mp4",
+      "max_file_mb": 100
+    }
+  ],
+  "copy": {
+    "hook_on_screen": "3 jam riset iklan? Cukup 30 menit.",
+    "meta": {
+      "primary_text": "Masih 3 jam riset iklan tiap minggu? Template ini memangkasnya jadi 30 menit, lengkap dengan contoh nyata.",
+      "headline": "Riset Iklan Selesai 30 Menit",
+      "description": "Ebook + 50 template",
+      "cta": "LEARN_MORE"
+    }
+  },
+  "diversity": {
+    "angle": "waktu riset terbuang",
+    "persona": "owner UMKM sibuk",
+    "hook_type": "pertanyaan pain",
+    "format": "talking head",
+    "visual_world": "meja kerja malam, laptop, jam dinding",
+    "emotional_tone": "lega",
+    "offer_framing": "hemat waktu"
+  },
+  "storyboard": [
+    {
+      "start_s": 0,
+      "end_s": 3,
+      "visual": "close-up jam dinding",
+      "on_screen_text": "3 jam riset iklan?",
+      "vo": "",
+      "music_sfx": "tick",
+      "transition": "cut"
+    },
+    {
+      "start_s": 3,
+      "end_s": 15,
+      "visual": "demo template",
+      "on_screen_text": "Cukup 30 menit",
+      "vo": "",
+      "music_sfx": "",
+      "transition": "cut"
+    }
+  ],
+  "safe_zone": {
+    "top_pct": 14,
+    "bottom_pct": 20
+  },
+  "delivery": {
+    "file_name": "b261126_time-pain_h1_vid916_v1.mp4",
+    "return_via": "/daekan-meta-ads:4-terima-aset"
+  }
+}

@@ -6,7 +6,7 @@ argument-hint: "<produk> [rentang-tanggal] [ad-account-id]"
 
 # 1 · Riset — Meta Ads × Daekan Katalisa
 
-Output tunggal fase ini adalah **`research/latest.md`**. Fase berikutnya (`/daekan-meta-ads:2-strategi`) hanya bisa jalan jika file ini ada dan `status: approved`.
+Output tunggal fase ini adalah **`research/latest.md`**. Fase berikutnya (`/daekan-meta-ads:2-landing-page`) hanya bisa jalan jika file ini ada dan `status: approved`.
 
 **Kontrak yang mengikat:** `ARCHITECTURE.md` di root plugin (§1.2 fallback, §2 kontrak file, §3 UTM, §5 keamanan). Baca dulu sebelum mulai. Jika ada konflik antara skill ini dan ARCHITECTURE.md, ARCHITECTURE.md yang menang.
 
@@ -48,7 +48,7 @@ Tulis research/latest.md (status: draft) dengan 8 section wajib §2.4, dan WAJIB
 Baris terakhir = TOTAL. Di bawah tabel: daftar mismatch (UTM tak dikenal, entitas tanpa order, order tanpa UTM, nama melanggar kontrak).
 
 2) Di "## Sinyal Creative Fatigue" — Tabel Kandidat Ad Fatigue:
-| ad (utm_content) | frequency | CTR 7h vs 7h sebelumnya | CPM Δ | CPA Δ / ROAS Δ | kriteria terpenuhi | rekomendasi (ganti angle / iterasi hook / pause) |
+| ad (utm_content) | hook (verbatim) | frequency | CTR 7h vs 7h sebelumnya | CPM Δ | CPA Δ / ROAS Δ | kriteria terpenuhi | rekomendasi (ganti angle / iterasi hook / pause) |
 
 3) Di "## Riset Kompetitor & Tren (30 hari)" — Tabel Rangkuman Hook Kompetitor:
 | kompetitor | hook (verbatim, ≤ 15 kata) | angle | offer | format | lama tayang | sumber |
@@ -91,4 +91,4 @@ Lalu tanyakan: **"Setujui riset ini sebagai dasar batch `<batch_id>`?"**
 
 ## Selesai
 
-Laporkan path file dan status. Langkah berikutnya: **`/daekan-meta-ads:2-strategi`**.
+Laporkan path file dan status. Langkah berikutnya: **`/daekan-meta-ads:2-landing-page`**.

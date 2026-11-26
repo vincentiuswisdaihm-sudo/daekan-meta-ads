@@ -5,14 +5,14 @@
     "url": "https://github.com/vincentiuswisdaihm-sudo"
   },
   "metadata": {
-    "description": "Marketplace daekan-meta-ads: plugin pipeline riset → strategi → landing page → produksi (Daekan + Remotion) → launch Meta Ads PAUSED, beserta 4 plugin pendukung (MIT) yang di-pin ke commit tertentu dan terpasang otomatis sebagai dependensi."
+    "description": "Marketplace daekan-meta-ads: pipeline riset → landing page → creative brief → terima aset → launch Meta Ads PAUSED, beserta plugin pendukung (MIT) yang di-pin dan terpasang otomatis sebagai dependensi."
   },
   "plugins": [
     {
       "name": "daekan-meta-ads",
       "source": "./",
-      "description": "Pipeline Meta Ads end-to-end untuk produk digital (riset, strategi, landing page, produksi, launch) dengan Daekan Katalisa MCP, Meta Ads MCP, dan Remotion.",
-      "version": "0.4.0",
+      "description": "Pipeline Meta Ads: riset → landing page → creative brief siap produksi (handoff ke Video Editor/Designer) → terima aset → launch PAUSED, dengan Daekan Katalisa MCP dan Meta Ads MCP.",
+      "version": "0.5.0",
       "author": {
         "name": "vincentiuswisdaihm-sudo"
       },

@@ -7,6 +7,6 @@ Dua file di folder ini adalah salinan **tanpa perubahan** dari [msitarzewski/age
 | `ad-creative-strategist.md` | `paid-media/paid-media-creative-strategist.md` |
 | `image-prompt-engineer.md` | `design/design-image-prompt-engineer.md` |
 
-File-file ini **bukan subagent plugin**. Isinya standar kerja yang dibaca oleh `agents/creative-strategist.md` dan `agents/lp-strategist.md` saat menyusun copy iklan dan prompt visual Daekan. Field `tools` di front-matter-nya tidak berlaku di plugin ini. Guardrail `ARCHITECTURE.md` §5 tetap mengikat.
+File-file ini **bukan subagent plugin**. Isinya standar kerja yang dibaca oleh `agents/creative-strategist.md` dan `agents/lp-strategist.md` saat menyusun konsep, copy iklan, dan arahan visual di Creative Brief untuk Video Editor/Designer. Field `tools` di front-matter-nya tidak berlaku di plugin ini. Guardrail `ARCHITECTURE.md` §5 tetap mengikat.
 
 Untuk memperbarui, salin ulang kedua file dari commit baru, perbarui SHA di sini dan di `THIRD_PARTY_NOTICES.md`, lalu naikkan versi plugin.
