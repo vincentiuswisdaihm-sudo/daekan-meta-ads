@@ -39,7 +39,7 @@ Tandai ad sebagai **fatigue** jika ≥ 2 kriteria berikut terpenuhi (bandingkan 
 - CPA naik ≥ 30% atau ROAS turun ≥ 30%.
 - Sinyal anomali/fatigue dari tool insight Meta, jika tersedia.
 
-Untuk tiap ad fatigue, tulis angka pendukungnya. Jangan hanya menulis label.
+Untuk tiap ad fatigue, tulis angka pendukungnya; jangan hanya menulis label. Sertakan juga **hook verbatim** iklan tersebut (kolom `hook`). Kolom ini dipakai Fase 3 untuk memastikan konsep baru tidak mirip iklan yang sudah lelah (anti Meta similarity).
 
 ### 3. Penjualan per UTM (Daekan Katalisa MCP)
 - Ambil order dan laporan penjualan pada rentang tanggal yang sama, dikelompokkan per `utm_source`, `utm_campaign`, `utm_term`, `utm_content`.
@@ -71,9 +71,9 @@ Untuk tiap ad fatigue, tulis angka pendukungnya. Jangan hanya menulis label.
 - Tulis file baru dengan front-matter (`phase: research`, `status: draft`, `generated_by: ads-researcher`, `source_file: null`) dan **8 section wajib** sesuai `ARCHITECTURE.md` §2.4, dengan urutan dan judul yang sama persis.
 - Tiga tabel wajib dengan kolom persis sesuai §2.4:
   - **Performa Meta Ads vs Omzet UTM Daekan**, di Rekonsiliasi, dengan baris TOTAL.
-  - **Kandidat Ad Fatigue**, di Sinyal Creative Fatigue.
+  - **Kandidat Ad Fatigue** (termasuk kolom `hook` verbatim), di Sinyal Creative Fatigue.
   - **Rangkuman Hook Kompetitor**, di Riset Kompetitor.
-- Section `## Peluang & Hipotesis untuk Batch Berikutnya` berisi 3–7 hipotesis yang bisa diuji. Format: "Jika kita <ubah X> untuk <audiens Y>, maka <metrik Z> membaik karena <bukti dari data di atas>."
+- Section `## Peluang & Hipotesis untuk Batch Berikutnya` berisi 3–7 hipotesis yang bisa diuji, dan menjadi bahan long-list angle Fase 3 (Creative Brief). Format: "Jika kita <ubah X> untuk <audiens Y>, maka <metrik Z> membaik karena <bukti dari data di atas>."
 
 ## Output ke pemanggil
 
@@ -81,4 +81,4 @@ Balas dengan:
 1. Path file yang ditulis.
 2. Ringkasan eksekutif (maks 5 poin).
 3. Daftar sumber data yang `TIDAK TERSEDIA` (jika ada).
-4. Pengingat bahwa `status` masih `draft` dan perlu disetujui user sebelum Fase 2.
+4. Pengingat bahwa `status` masih `draft` dan perlu disetujui user sebelum Fase 2 (Landing Page).

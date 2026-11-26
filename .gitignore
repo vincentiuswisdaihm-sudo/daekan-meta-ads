@@ -16,14 +16,17 @@ service-account*.json
 *.CSV
 data/clients/
 
-# ── Hasil render video lokal (Remotion) ──────────────
+# ── File aset hasil produksi luar & file kerja lokal ──
+assets/
 out/
 renders/
 temp/
+*.mp4
+*.mov
+*.webm
 
-# ── Node / Remotion ──────────────────────────────────
+# ── Node ─────────────────────────────────────────────
 node_modules/
-.remotion/
 
 # ── OS / editor / log ────────────────────────────────
 .DS_Store

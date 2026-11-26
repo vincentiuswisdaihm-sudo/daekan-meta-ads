@@ -1,11 +1,11 @@
 ---
-name: 4-launch
-description: Fase 4 pipeline daekan-meta-ads. Hanya berjalan jika briefs/assets-ready.md dan briefs/lp-sync.md ada, approved, dan batch_id-nya sama. Memastikan Meta Pixel produk aktif dan landing page sudah published di Daekan, mengunggah seluruh aset ke Meta Ads MCP, membuat campaign/ad set/ad berstatus PAUSED dengan URL landing page bersih dari lp-sync.md + url_tags UTM dinamis standar, memverifikasi status, lalu mencatat hasilnya ke reports/launch-log.md.
+name: 5-launch
+description: Fase 5 pipeline daekan-meta-ads. Hanya berjalan jika briefs/assets-ready.md dan briefs/lp-sync.md approved dengan batch_id yang sama. Memastikan Meta Pixel produk aktif dan landing page sudah published di Daekan, mengunggah aset hasil produksi luar dari manifest ke Meta Ads MCP dengan copy dari briefs/handoff/*.json, membuat campaign/ad set/ad berstatus PAUSED dengan URL landing page bersih dari lp-sync.md + url_tags UTM dinamis standar, memverifikasi status, lalu mencatat hasilnya ke reports/launch-log.md.
 argument-hint: "[ad-account-id]"
 disable-model-invocation: true
 ---
 
-# 4 · Launch — Meta Ads (selalu PAUSED)
+# 5 · Launch — Meta Ads (selalu PAUSED)
 
 Output: entitas Meta Ads berstatus **PAUSED** dan satu section baru di **`reports/launch-log.md`** (append-only).
 
@@ -20,19 +20,18 @@ Argumen: `$ARGUMENTS`
 ## Langkah 0 — GATE (wajib, jalankan paling awal)
 
 1. Jika **`briefs/assets-ready.md` tidak ada**, **TOLAK** dan berhenti:
-   > Fase 4 tidak bisa dijalankan: `briefs/assets-ready.md` belum ada. Selesaikan `/daekan-meta-ads:3-produksi` terlebih dahulu.
+   > Fase 5 tidak bisa dijalankan: `briefs/assets-ready.md` belum ada. Kirim brief ke produksi lalu jalankan `/daekan-meta-ads:4-terima-aset` terlebih dahulu.
 2. TOLAK juga jika salah satu kondisi berikut terpenuhi:
-   - `status` di `briefs/assets-ready.md` bukan `approved`.
-   - `batch_id`-nya berbeda dengan `briefs/batch-latest.md`.
-   - Gate CLI pada `briefs/batch-latest.md` atau `briefs/assets-ready.md` mengeluarkan **ERROR**.
+   - `status` di `briefs/assets-ready.md` atau `briefs/creative-brief.md` bukan `approved`.
+   - `batch_id` di `assets-ready.md`, `creative-brief.md`, dan `lp-sync.md` tidak sama.
+   - Gate CLI pada `briefs/creative-brief.md` atau `briefs/assets-ready.md` mengeluarkan **ERROR**.
    - Ada baris manifest yang `status`-nya bukan `ready`.
-   - Ada `render_path` yang filenya tidak ada di disk.
-3. **Landing page (Fase 2B).** Jika **`briefs/lp-sync.md` tidak ada**, **TOLAK**:
-   > Fase 4 tidak bisa dijalankan: `briefs/lp-sync.md` belum ada. Selesaikan `/daekan-meta-ads:2b-landing-page` terlebih dahulu.
+   - Ada file aset lokal di manifest yang tidak ditemukan di disk.
+3. **Landing page (Fase 2).** Jika **`briefs/lp-sync.md` tidak ada**, **TOLAK**:
+   > Fase 5 tidak bisa dijalankan: `briefs/lp-sync.md` belum ada. Selesaikan `/daekan-meta-ads:2-landing-page` terlebih dahulu.
 
    TOLAK juga jika salah satu kondisi berikut terpenuhi:
    - `status` di `briefs/lp-sync.md` bukan `approved`.
-   - `batch_id`-nya berbeda dengan `briefs/batch-latest.md` dan `briefs/assets-ready.md`.
    - Gate CLI pada `briefs/lp-sync.md` mengeluarkan **ERROR**. Gate menolak URL dengan `utm_`, pixel yang tidak `active`, dan file tanpa `Verdict batch: PASS`.
    - `meta_pixel_status` bukan `active`.
 4. Jika `reports/launch-log.md` sudah memuat section untuk `batch_id` ini, **jangan membuat ulang**. Tanyakan user apakah ingin melanjutkan entitas yang belum dibuat atau membatalkan.
@@ -41,7 +40,7 @@ Argumen: `$ARGUMENTS`
 
 1. **Daekan Katalisa MCP (baca):** ambil pengaturan pixel produk. Meta Pixel harus **aktif**. Catat `pixel_id`, dan status Conversions API jika tersedia. Bandingkan dengan `meta_pixel_id` di brief.
 2. **Meta Ads MCP (baca):** pastikan dataset/pixel dengan ID tersebut ada dan bisa diakses ad account ini (mis. `ads_get_datasets`, `ads_get_dataset_details`), dan menerima event dalam 7 hari terakhir, terutama `Purchase` dan `InitiateCheckout` (mis. `ads_get_dataset_stats` / `ads_get_dataset_quality`).
-3. Bandingkan dengan `## Pixel & Tracking` di `briefs/lp-sync.md`. `meta_pixel_id` harus sama. Pixel bisa berubah setelah Fase 2B, jadi verifikasi live di langkah 1–2 tetap wajib dan hasilnya yang menentukan.
+3. Bandingkan dengan `## Pixel & Tracking` di `briefs/lp-sync.md`. `meta_pixel_id` harus sama. Pixel bisa berubah setelah Fase 2, jadi verifikasi live di langkah 1–2 tetap wajib dan hasilnya yang menentukan.
 4. Jika pixel tidak aktif, ID tidak cocok, tidak terhubung ke ad account, atau tidak ada event sama sekali, **BERHENTI**. Jelaskan temuannya dan minta user memperbaiki pengaturan pixel di Daekan terlebih dahulu. Mengubah pengaturan pixel bukan bagian dari skill ini.
 
 ## Langkah 2 — Kumpulkan data launch
@@ -50,12 +49,14 @@ Argumen: `$ARGUMENTS`
 2. **Identitas:** Facebook Page dan akun Instagram yang dipakai (mis. `ads_get_ad_account_pages`, `ads_get_ig_accounts`). Konfirmasi ke user.
 3. **Destination URL dari `briefs/lp-sync.md`:**
    - `landing_page_url` di `## Landing Page` adalah **satu-satunya** destination URL untuk semua ad di batch ini. Nilainya URL bersih dan tidak mengandung `utm_`.
-   - Jika berbeda dengan `landing_page_url` di `briefs/batch-latest.md`, yang dipakai adalah `lp-sync.md`. Catat perbedaannya di launch-log.
-   - **Pastikan LP sudah published di Daekan (baca).** Cek halaman `lp_page_id` / `landing_page_url` berstatus published, dan revisi Fase 2B yang disetujui sudah live. Jika `lp_publish_status` masih `draft` atau halaman belum live, **BERHENTI** dan minta user mem-publish LP di Daekan. Publish hanya atas perintah eksplisit user (ARCHITECTURE.md §5 butir 9).
-4. **Dari `briefs/batch-latest.md`:**
-   - Primary text, headline, description, CTA per `ad_name`.
-   - `utm_campaign` dan `utm_term` dari `## Struktur Kampanye`.
-5. **Dari `briefs/assets-ready.md`:** `daekan_asset_url` (gambar) dan `render_path` (video) per `ad_name`.
+   - **Pastikan LP sudah published di Daekan (baca)**, mis. dengan `get_landing_page`. Cek halaman `lp_page_id` / `landing_page_url` berstatus published, dan revisi Fase 2 yang disetujui sudah live. Jika `lp_publish_status` masih `draft` atau halaman belum live, **BERHENTI** dan minta user mem-publish LP di Daekan. Publish hanya atas perintah eksplisit user (ARCHITECTURE.md §5 butir 9).
+4. **Copy dari `briefs/handoff/<ad_name>.json` → `copy.meta`:**
+   - `primary_text`, `headline`, `description`, `cta`, dan opsional `variations`.
+   - Nilainya identik dengan blok Copy Meta di `creative-brief.md` (dijamin oleh gate), sehingga yang diunggah sama dengan yang mungkin sudah di-copy-paste user.
+   - `utm_campaign` dan `utm_term` diambil dari `## Struktur Kampanye` di `briefs/creative-brief.md`.
+5. **Media dari `briefs/assets-ready.md`:**
+   - kolom `file` per `asset_id` (file lokal atau URL);
+   - hanya aset iklan (ber-`ad_name`) yang di-launch; aset LP (`lp-hero`, `lp-mockup`) dilewati.
 6. **Parameter yang wajib dikonfirmasi user** (tanyakan sekaligus): budget harian/lifetime per campaign atau ad set (CBO/ABO), jadwal mulai, targeting/audiens per ad set, dan Special Ad Category jika relevan.
 7. **Pemetaan objektif** (token `objektif` → objective Meta):
 
@@ -83,7 +84,7 @@ Tampilkan **Rencana Launch**:
 |---|---|---|---|---|
 | campaign | `ebook-ads101_sales_tof_20261125` | OUTCOME_SALES, budget … | — | PAUSED |
 | ad set | `lal1-buyers_id_advplus` | pixel …, PURCHASE, targeting … | — | PAUSED |
-| ad | `b261125_pain-time_h2_vid916_v1` | link LP, url_tags standar, CTA … | renders/…mp4 | PAUSED |
+| ad | `b261126_time-pain_h1_vid916_v1` | link LP, url_tags standar, copy dari handoff JSON | assets/b261126_time-pain_h1_vid916_v1.mp4 | PAUSED |
 
 Sertakan: `landing_page_url`, `url_tags`, total budget harian, dan jumlah entitas.
 
@@ -96,11 +97,11 @@ Tanyakan: **"Buat semua entitas di atas dengan status PAUSED? (ya/tidak)"**. Tan
 Untuk setiap panggilan create, **set `status: PAUSED` secara eksplisit** (jangan bergantung pada default). Catat setiap ID yang dikembalikan.
 
 1. **Upload media.** Ikuti deskripsi tool Meta Ads MCP yang tersedia.
-   - **Gambar:** dari `daekan_asset_url` (mis. `ads_creative_upload_media`). Jika tool butuh file lokal, unduh dulu ke `temp/upload/` lalu pakai `ads_creative_upload_local_image` → `ads_finalize_local_ad_image_upload`. Simpan `image_hash`.
-   - **Video:** dari `render_path` (mis. `ads_create_upload_url` → unggah → `ads_finalize_upload`). Tunggu hingga video siap diproses (cek dengan `ads_get_ad_videos` / `ads_get_async_result`). Thumbnail = aset Daekan yang dipakai di video. Simpan `video_id`.
+   - **Gambar & carousel:** dari kolom `file` manifest. URL → mis. `ads_creative_upload_media`. File lokal → `ads_creative_upload_local_image` → `ads_finalize_local_ad_image_upload`. Simpan `image_hash`.
+   - **Video:** dari kolom `file` manifest (mis. `ads_create_upload_url` → unggah → `ads_finalize_upload`). Tunggu hingga video siap diproses (`ads_get_ad_videos` / `ads_get_async_result`). Thumbnail: frame dari video, kecuali brief menentukan lain. Simpan `video_id`.
 2. **Campaign** (`ads_create_campaign`): `name` = `utm_campaign`, objective sesuai pemetaan, budget sesuai rencana, Special Ad Category sesuai rencana, **`status: PAUSED`**.
 3. **Ad set** (`ads_create_ad_set`): `name` = `utm_term`, optimasi + `pixel_id` + event, targeting, budget/jadwal, **`status: PAUSED`**.
-4. **Creative** (`ads_create_creative`): Page/IG identity, link = `landing_page_url` dari `briefs/lp-sync.md`, primary text/headline/description/CTA dari brief, `image_hash` atau `video_id`, **`url_tags` standar**.
+4. **Creative** (`ads_create_creative`): Page/IG identity, link = `landing_page_url` dari `briefs/lp-sync.md`, primary text/headline/description/CTA dari `copy.meta` di handoff JSON, `image_hash` atau `video_id`, **`url_tags` standar**.
 5. **Ad** (`ads_create_ad`): `name` = `ad_name` (= `utm_content`), ad set & creative terkait, **`status: PAUSED`**.
 
 Jika terjadi error: **berhenti di titik itu**. Jangan retry membabi buta dan jangan menghapus entitas yang sudah terbuat. Catat entitas yang sudah dibuat beserta errornya di launch-log, lalu tanya user langkah selanjutnya.
@@ -114,7 +115,7 @@ Jika terjadi error: **berhenti di titik itu**. Jangan retry membabi buta dan jan
 
 ## Langkah 6 — Catat ke `reports/launch-log.md` (append-only)
 
-- Jika file belum ada, buat dengan front-matter: `batch_id`, `phase: launch`, `status: approved`, `generated_at`, `generated_by: 4-launch`, `source_file: briefs/assets-ready.md`.
+- Jika file belum ada, buat dengan front-matter: `batch_id`, `phase: launch`, `status: approved`, `generated_at`, `generated_by: 5-launch`, `source_file: briefs/assets-ready.md`.
 - Jika file sudah ada, **hanya** perbarui `batch_id` dan `generated_at` di front-matter ke batch terbaru. Isi di bawahnya tidak boleh diubah.
 - **Tambahkan** di akhir file:
 
